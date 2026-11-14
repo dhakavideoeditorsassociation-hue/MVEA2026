@@ -36,9 +36,9 @@ The seed dataset is official association data, not placeholder copy:
 - Contact: `dhakavideoeditorsassociation@gmail.com`, `+8801957-452277`, `+8801763-234375`,
   Dhaka, Bangladesh.
 
-Career histories, showreels and skill lists are **not invented**. Individual members have no
-portrait on file yet, so profiles render initials and display a "career details are being
-verified" notice until the editor completes their dashboard profile.
+Career histories, showreels and skill lists are **not invented**. Portraits are uploaded by the
+secretariat from `/admin` (see *Member photos*); until then profiles render initials and show a
+"career details are being verified" notice.
 
 ---
 
@@ -152,6 +152,27 @@ before publishing to the `press_releases` collection. Cards show the thumbnail, 
 "Official statement on Facebook" badge, and link to the statement in a new tab; without an
 image the emblem is used.
 
+
+## Member photos
+
+Administrators upload portraits from **`/admin` → Committee order → Profile photo** (the member
+list under the ranking table). Each row has a search box, the current portrait or initials, and a
+file picker:
+
+1. the image is uploaded with the Cloudinary unsigned preset (`uploadFile`);
+2. the returned URL is written to Firestore `members/{slug}` with `merge: true`, so a member that
+   only exists in `seed.ts` gains a lightweight document without losing seed data;
+3. the local photo map in `MemberPhotoProvider` updates instantly, so the new portrait appears on
+   `/members`, `/members/[slug]`, `/members/[slug]/cv`, `/committee` and the homepage leadership
+   cards without a reload.
+
+Without Firebase/Cloudinary credentials the upload still runs in demo mode (browser object URL,
+stored in `localStorage`) and every screen shows the demo banner. The hero and the committee strip
+call the same resolver, so initials are replaced everywhere at once.
+
+The homepage hero intentionally has **no stats strip and no slide caption bar** — the rotating
+background is atmosphere only, and the page flows straight from the hero into the six pillars.
+
 ---
 
 ## Firebase setup (free Spark plan)
@@ -246,8 +267,9 @@ public/logo.svg  firestore.rules  storage.rules  .env.example
 
 - Demo-mode approvals and edits do not rewrite the seeded public pages (no server database
   yet). Configure Firebase and the same actions persist for everyone.
-- Individual member photos, showreels and career histories are pending — the committee has not
-  supplied them, and they are deliberately not fabricated.
+- Portraits, showreels and career histories are still pending for most members: the committee
+  uploads photographs from /admin, and each editor completes the rest from /dashboard.
+  Nothing is fabricated to fill the gap.
 - Two early vector drafts remain in `public/` (`logo.svg`, `logo-emblem.svg`) and are no longer
   referenced; they can be deleted.
 - Unknown `/members/<slug>` and `/programs/<slug>` values render the branded not-found page,

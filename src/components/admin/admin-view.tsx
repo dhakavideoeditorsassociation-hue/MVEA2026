@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { FacebookIcon } from "@/components/brand-icons";
+import { Avatar } from "@/components/common/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label, Select, Textarea } from "@/components/ui/form-controls";
@@ -30,6 +31,7 @@ import { categoryKey, POST_CATEGORIES } from "@/lib/categories";
 import { experienceLabel, formatShortDate } from "@/lib/format";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { useI18n } from "@/lib/i18n/provider";
+import { saveMemberPhoto, useMemberPhotos } from "@/lib/photos/member-photos";
 import { uploadFile } from "@/lib/upload";
 import {
   addPost,
@@ -248,7 +250,10 @@ export function AdminView({ members, heroSlides, posts, pressArticles }: AdminVi
           ) : null}
 
           {tab === "ranking" ? (
-            <RankingPanel members={rankedMembers} onRanksChanged={setRankOverrides} />
+            <div className="space-y-10">
+              <RankingPanel members={rankedMembers} onRanksChanged={setRankOverrides} />
+              <MemberPhotosPanel members={rankedMembers} />
+            </div>
           ) : null}
 
           {tab === "press" ? (
@@ -1188,5 +1193,114 @@ function PressReleasePanel({
         )}
       </section>
     </div>
+  );
+}
+/**
+ * Member portrait management.
+ *
+ * Uploads go through the unsigned Cloudinary preset (`uploadFile`) and the
+ * returned URL is written to Firestore `members/{slug}` with `merge: true`, so a
+ * record that only exists in `seed.ts` gains a portrait document without losing
+ * the rest of its data. The local photo context updates immediately, which is
+ * what refreshes `/members`, the profile, the CV, `/committee` and the homepage
+ * leadership cards.
+ */
+function MemberPhotosPanel({ members }: { members: Member[] }) {
+  const { t, lang } = useI18n();
+  const { setPhoto } = useMemberPhotos();
+  const [query, setQuery] = useState("");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  async function upload(member: Member, file: File | undefined) {
+    if (!file) return;
+    setBusyId(member.id);
+    setError(false);
+    setSavedId(null);
+    try {
+      const url = await uploadFile(file, "image");
+      await saveMemberPhoto({ key: member.slug, memberId: member.id, photoUrl: url });
+      setPhoto(member.slug, url);
+      setSavedId(member.id);
+      window.setTimeout(() => setSavedId(null), 2000);
+    } catch {
+      setError(true);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const needle = query.trim().toLowerCase();
+  const list = needle
+    ? members.filter((member) =>
+        [member.fullNameEn, member.fullNameBn, member.mediaHouse].join(" ").toLowerCase().includes(needle),
+      )
+    : members;
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          {t("dashboard.field.photo")}
+        </h2>
+        <Input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t("members.search")}
+          aria-label={t("members.search")}
+          className="h-9 w-full sm:w-64"
+        />
+      </div>
+
+      {error ? (
+        <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {t("dashboard.upload.error")}
+        </p>
+      ) : null}
+
+      <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+        {list.map((member) => (
+          <li key={member.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5">
+            <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-muted text-xs text-primary ring-1 ring-border">
+              <Avatar
+                name={lang === "bn" ? member.fullNameBn : member.fullNameEn}
+                src={member.photoUrl}
+                slug={member.slug}
+                memberId={member.id}
+                sizes="40px"
+                textClassName="text-[0.65rem]"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-foreground">
+                {lang === "bn" ? member.fullNameBn : member.fullNameEn}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {member.membershipId} · {member.mediaHouse}
+              </p>
+            </div>
+            <label className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-border px-2.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/50">
+              {busyId === member.id ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+              ) : (
+                <ImagePlus className="h-3.5 w-3.5" aria-hidden />
+              )}
+              {busyId === member.id ? t("dashboard.upload.busy") : t("dashboard.upload.choose")}
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                disabled={busyId !== null}
+                onChange={(event) => void upload(member, event.target.files?.[0])}
+              />
+            </label>
+            {savedId === member.id ? (
+              <span className="text-xs font-semibold text-primary">{t("admin.ranking.saved")}</span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

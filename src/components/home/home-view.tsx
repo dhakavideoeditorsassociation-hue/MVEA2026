@@ -13,6 +13,7 @@ import {
   Wrench,
 } from "lucide-react";
 
+import { Avatar } from "@/components/common/avatar";
 import { SectionHeading } from "@/components/common/section-heading";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { MemberCard } from "@/components/members/member-card";
@@ -23,8 +24,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { formatDate } from "@/lib/format";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { useI18n } from "@/lib/i18n/provider";
+import { slugifyName } from "@/lib/slug";
 import type {
-  AssociationStat,
   CmsPost,
   CommitteeMember,
   HeroSlide,
@@ -44,7 +45,6 @@ const PILLARS: Array<{ key: string; Icon: typeof Users; title: TranslationKey; d
 
 type HomeViewProps = {
   slides: HeroSlide[];
-  stats: AssociationStat[];
   featured: Member[];
   press: PressArticle[];
   releases: PressRelease[];
@@ -52,27 +52,12 @@ type HomeViewProps = {
   committee: CommitteeMember[];
 };
 
-export function HomeView({ slides, stats, featured, press, releases, posts, committee }: HomeViewProps) {
+export function HomeView({ slides, featured, press, releases, posts, committee }: HomeViewProps) {
   const { t, tx, lang } = useI18n();
 
   return (
     <>
       <HeroCarousel slides={slides} />
-
-      {stats.length > 0 ? (
-        <section aria-label={t("home.pillars.eyebrow")} className="container relative z-10 -mt-8">
-          <div className="grid grid-cols-2 divide-border overflow-hidden rounded-lg border border-border bg-card shadow-lift sm:grid-cols-4 sm:divide-x">
-            {stats.map((stat) => (
-              <div key={stat.id} className="px-4 py-5 text-center sm:px-6">
-                <p className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{stat.value}</p>
-                <p className="mt-1 text-[0.72rem] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                  {tx(stat.label)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
 
       <section className="container py-16 lg:py-20">
         <SectionHeading
@@ -167,28 +152,31 @@ export function HomeView({ slides, stats, featured, press, releases, posts, comm
             action={{ href: "/committee", label: t("home.committee.cta") }}
           />
           <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {committee.map((person) => (
-              <div
-                key={person.id}
-                className="rounded-lg border border-border bg-card p-3 text-center shadow-card transition-colors hover:border-primary/40"
-              >
-                <span className="relative mx-auto grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-muted text-lg font-bold text-primary ring-2 ring-border">
-                  {person.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={person.photoUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    (lang === "bn" ? person.name.bn : person.name.en)
-                      .split(" ")
-                      .slice(0, 2)
-                      .map((part) => part.charAt(0))
-                      .join("")
-                  )}
-                </span>
-                <p className="mt-3 text-sm font-semibold leading-snug text-foreground">{tx(person.name)}</p>
-                <p className="mt-0.5 text-[0.7rem] font-medium uppercase tracking-[0.1em] text-primary">{tx(person.role)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{person.mediaHouse}</p>
-              </div>
-            ))}
+            {committee.map((person) => {
+              const name = lang === "bn" ? person.name.bn : person.name.en;
+              return (
+                <Link
+                  key={person.id}
+                  href={`/members/${slugifyName(person.name.en)}`}
+                  className="group rounded-lg border border-border bg-card p-3 text-center shadow-card transition-colors hover:border-primary/40"
+                >
+                  <span className="relative mx-auto block h-16 w-16 overflow-hidden rounded-full bg-muted text-lg font-bold text-primary ring-2 ring-border">
+                    <Avatar
+                      name={name}
+                      src={person.photoUrl}
+                      slug={slugifyName(person.name.en)}
+                      sizes="64px"
+                      textClassName="text-base"
+                    />
+                  </span>
+                  <p className="mt-3 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+                    {tx(person.name)}
+                  </p>
+                  <p className="mt-0.5 text-[0.7rem] font-medium uppercase tracking-[0.1em] text-primary">{tx(person.role)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{person.mediaHouse}</p>
+                </Link>
+              );
+            })}
           </div>
           <p className="mt-6 inline-flex items-center gap-2 text-xs text-muted-foreground">
             <CalendarDays className="h-3.5 w-3.5" aria-hidden />

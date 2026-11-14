@@ -28,7 +28,7 @@ export function MemberCard({ member, className, priority = false }: MemberCardPr
       )}
     >
       <Link href={`/members/${member.slug}`} className="relative block aspect-[4/3] overflow-hidden bg-muted">
-        <Avatar name={name} src={member.photoUrl} sizes="(min-width: 1024px) 320px, (min-width: 640px) 45vw, 90vw" priority={priority} textClassName="text-4xl" />
+        <Avatar name={name} src={member.photoUrl} slug={member.slug} memberId={member.id} sizes="(min-width: 1024px) 320px, (min-width: 640px) 45vw, 90vw" priority={priority} textClassName="text-4xl" />
         <span className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" aria-hidden />
         {member.rankOrder ? (
           <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/90 px-2 py-1 text-[0.7rem] font-bold text-foreground shadow-sm backdrop-blur">

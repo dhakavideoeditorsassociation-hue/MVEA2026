@@ -7,6 +7,7 @@ import { ArrowLeft, Printer } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { LOGO_SRC } from "@/lib/brand";
+import { resolvePhoto, useMemberPhotos } from "@/lib/photos/member-photos";
 import { experienceLabel, formatYearRange, rankLabel } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/provider";
 import type { Member } from "@/lib/types";
@@ -17,6 +18,8 @@ import type { Member } from "@/lib/types";
  */
 export function MemberCvView({ member }: { member: Member }) {
   const { t, lang, tx } = useI18n();
+  const { photos } = useMemberPhotos();
+  const portrait = resolvePhoto(photos, { slug: member.slug, memberId: member.id }, member.photoUrl);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -45,8 +48,12 @@ export function MemberCvView({ member }: { member: Member }) {
 
       <article className="rounded-lg border border-border bg-card p-8 text-card-foreground shadow-card print:border-0 print:bg-white print:p-0 print:text-black">
         <header className="flex items-start gap-5 border-b border-border pb-5 print:border-black/20">
-          <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-white ring-1 ring-border">
-            <Image src={LOGO_SRC} alt="" width={64} height={64} className="h-16 w-16 object-contain p-[7%]" unoptimized />
+          <span className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-white ring-1 ring-border">
+            {portrait ? (
+              <Image src={portrait} alt="" fill sizes="80px" unoptimized className="object-cover" />
+            ) : (
+              <Image src={LOGO_SRC} alt="" width={80} height={80} className="h-20 w-20 object-contain p-[7%]" unoptimized />
+            )}
           </span>
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl font-bold tracking-tight">{lang === "bn" ? member.fullNameBn : member.fullNameEn}</h1>

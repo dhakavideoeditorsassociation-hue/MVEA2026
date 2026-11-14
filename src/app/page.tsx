@@ -11,9 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [slides, stats, featured, press, releases, posts, committee] = await Promise.all([
+  const [slides, featured, press, releases, posts, committee] = await Promise.all([
     repo.listHeroSlides(),
-    repo.listStats(),
     repo.listFeaturedMembers(4),
     repo.listPressArticles(3),
     repo.listPressReleases(2),
@@ -24,7 +23,6 @@ export default async function HomePage() {
   return (
     <HomeView
       slides={slides}
-      stats={stats}
       featured={featured}
       press={press}
       releases={releases}

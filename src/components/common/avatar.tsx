@@ -3,11 +3,16 @@
 import Image from "next/image";
 
 import { initials } from "@/lib/format";
+import { resolvePhoto, useMemberPhotos } from "@/lib/photos/member-photos";
 import { cn } from "@/lib/utils";
 
 type AvatarProps = {
   name: string;
+  /** Portrait from the content record (may be empty). */
   src?: string;
+  /** Member slug — the key an admin-uploaded portrait is stored under. */
+  slug?: string;
+  memberId?: string;
   className?: string;
   sizes?: string;
   priority?: boolean;
@@ -17,19 +22,24 @@ type AvatarProps = {
 
 /**
  * Portrait with a deterministic initials fallback.
- * Members of the association have not all supplied photographs yet, so the
- * directory must look intentional without one.
+ *
+ * Admin-uploaded photos (Firestore or local override) take precedence over the
+ * record's own `photoUrl`, so a new portrait appears everywhere immediately.
  */
-export function Avatar({ name, src, className, sizes = "96px", priority = false, textClassName }: AvatarProps) {
-  if (src) {
+export function Avatar({ name, src, slug, memberId, className, sizes = "96px", priority = false, textClassName }: AvatarProps) {
+  const { photos } = useMemberPhotos();
+  const resolved = resolvePhoto(photos, { slug, memberId }, src);
+
+  if (resolved) {
     return (
       <Image
-        src={src}
+        src={resolved}
         alt={name}
         fill
         sizes={sizes}
         priority={priority}
-        className={cn("object-cover", className)}
+        unoptimized
+        className={cn("object-cover object-top", className)}
       />
     );
   }

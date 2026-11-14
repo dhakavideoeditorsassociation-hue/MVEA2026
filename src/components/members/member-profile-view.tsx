@@ -54,7 +54,7 @@ export function MemberProfileView({ member }: { member: Member }) {
 
           <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
             <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-full border border-border bg-muted shadow-card sm:h-36 sm:w-36">
-              <Avatar name={name} src={member.photoUrl} sizes="144px" priority textClassName="text-4xl" />
+              <Avatar name={name} src={member.photoUrl} slug={member.slug} memberId={member.id} sizes="144px" priority textClassName="text-4xl" />
             </div>
 
             <div className="min-w-0 flex-1">

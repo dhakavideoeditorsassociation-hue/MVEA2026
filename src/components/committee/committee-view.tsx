@@ -5,6 +5,7 @@ import { Users } from "lucide-react";
 import { Avatar } from "@/components/common/avatar";
 import { PageHero } from "@/components/common/page-hero";
 import { useI18n } from "@/lib/i18n/provider";
+import { slugifyName } from "@/lib/slug";
 import type { CommitteeMember } from "@/lib/types";
 
 function MemberTile({ person, prominent = false }: { person: CommitteeMember; prominent?: boolean }) {
@@ -29,6 +30,7 @@ function MemberTile({ person, prominent = false }: { person: CommitteeMember; pr
         <Avatar
           name={name}
           src={person.photoUrl}
+          slug={slugifyName(person.name.en)}
           sizes={prominent ? "64px" : "44px"}
           textClassName={prominent ? "text-lg" : "text-xs"}
         />
