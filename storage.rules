@@ -1,0 +1,45 @@
+rules_version = '2';
+
+// Firebase Storage rules (only needed if you upload avatars/CVs to Storage
+// instead of Cloudinary). Deploy: firebase deploy --only storage
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /avatars/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /cvs/{uid}/{fileName} {
+      // CVs are private: only the owner and admins may read them.
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+    }
+
+    match /hero/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

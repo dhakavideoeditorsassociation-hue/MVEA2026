@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Editorial light mode */
+    --background: 210 33% 99%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 347 77% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 32 95% 44%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 25% 96%;
+    --muted-foreground: 215 16% 42%;
+    --accent: 210 25% 94%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 347 77% 45%;
+    --radius: 0.85rem;
+  }
+
+  .dark {
+    /* Broadcast studio dark mode (default) */
+    --background: 222 47% 7%;
+    --foreground: 210 25% 96%;
+    --card: 222 40% 10%;
+    --card-foreground: 210 25% 96%;
+    --popover: 222 42% 9%;
+    --popover-foreground: 210 25% 96%;
+    --primary: 347 77% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 222 47% 8%;
+    --muted: 220 26% 15%;
+    --muted-foreground: 217 15% 66%;
+    --accent: 220 30% 17%;
+    --accent-foreground: 210 25% 96%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 22% 20%;
+    --input: 220 22% 20%;
+    --ring: 347 77% 55%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  html.lang-bn body {
+    @apply font-bangla;
+    font-feature-settings: normal;
+    line-height: 1.75;
+  }
+
+  ::selection {
+    background-color: hsl(var(--primary) / 0.22);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-semibold tracking-tight;
+  }
+
+  html.lang-bn h1,
+  html.lang-bn h2,
+  html.lang-bn h3,
+  html.lang-bn h4 {
+    letter-spacing: 0;
+    line-height: 1.35;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary;
+  }
+
+  html.lang-bn .eyebrow {
+    @apply tracking-normal text-[0.78rem];
+    text-transform: none;
+  }
+
+  .surface-card {
+    @apply rounded-lg border border-border bg-card text-card-foreground shadow-card;
+  }
+
+  .hairline {
+    @apply border-t border-border/70;
+  }
+
+  .link-underline {
+    @apply underline decoration-border decoration-1 underline-offset-4 transition-colors hover:decoration-primary;
+  }
+
+  .prose-editorial p {
+    @apply text-base leading-relaxed text-muted-foreground;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-foreground;
+  }
+
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  .grain {
+    background-image: radial-gradient(hsl(var(--foreground) / 0.06) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@media print {
+  .print-hidden {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  .print-plain {
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+}

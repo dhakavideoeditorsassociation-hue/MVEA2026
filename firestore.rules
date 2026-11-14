@@ -1,0 +1,106 @@
+rules_version = '2';
+
+// Firestore security rules for the Gonomadhyam Video Editor Association.
+// Deploy with: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Public editorial collections: readable by everyone, writable by admins.
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      // A new account may only create its own profile as a plain member.
+      allow create: if isOwner(uid)
+        && request.resource.data.role == 'member'
+        && request.resource.data.email is string;
+      // Members may edit their profile but never promote themselves.
+      allow update: if isAdmin()
+        || (isOwner(uid) && request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
+    }
+
+    match /applications/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Members submit drafts or pending applications with no membership ID.
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.status in ['draft', 'pending']
+        && request.resource.data.membershipId == null
+        && request.resource.data.rankOrder == null;
+
+      // Self-service updates may not touch the committee-owned fields.
+      allow update: if isAdmin()
+        || (isOwner(uid)
+            && request.resource.data.status in ['draft', 'pending']
+            && request.resource.data.membershipId == resource.data.membershipId
+            && request.resource.data.rankOrder == resource.data.rankOrder);
+
+      allow delete: if isAdmin();
+    }
+
+    // Public directory records. Only the committee writes these.
+    match /members/{memberId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /hero_slides/{slideId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /press_articles/{articleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /cms_posts/{postId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /committee/{memberId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /association/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Recruiter inquiries arrive from the public site (no login required),
+    // so creation is open but heavily validated. Only admins can read them.
+    match /recruiter_inquiries/{inquiryId} {
+      allow create: if request.resource.data.keys().hasAll(
+          ['memberId', 'recruiterName', 'company', 'email', 'message', 'status', 'createdAt'])
+        && request.resource.data.status == 'new'
+        && request.resource.data.email is string
+        && request.resource.data.email.size() < 200
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 10
+        && request.resource.data.message.size() < 4000;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Everything else is closed by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
