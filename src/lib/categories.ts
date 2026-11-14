@@ -1,20 +1,14 @@
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import type { PostCategory } from "@/lib/types";
 
-export const POST_CATEGORIES: PostCategory[] = [
-  "market-update",
-  "software-tools",
-  "workshop",
-  "journalism-ethics",
-  "storytelling",
-];
+export const POST_CATEGORIES: PostCategory[] = ["feature", "interview", "guide", "workshop", "ethics"];
 
 const CATEGORY_KEYS: Record<PostCategory, TranslationKey> = {
-  "market-update": "category.market-update",
-  "software-tools": "category.software-tools",
+  feature: "category.feature",
+  interview: "category.interview",
+  guide: "category.guide",
   workshop: "category.workshop",
-  "journalism-ethics": "category.journalism-ethics",
-  storytelling: "category.storytelling",
+  ethics: "category.ethics",
 };
 
 export function categoryKey(category: PostCategory): TranslationKey {

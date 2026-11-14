@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Printer } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
-import { experienceLabel, formatYearRange } from "@/lib/format";
+import { LOGO_SRC } from "@/lib/brand";
+import { experienceLabel, formatYearRange, rankLabel } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/provider";
 import type { Member } from "@/lib/types";
 
@@ -42,33 +44,41 @@ export function MemberCvView({ member }: { member: Member }) {
       </div>
 
       <article className="rounded-lg border border-border bg-card p-8 text-card-foreground shadow-card print:border-0 print:bg-white print:p-0 print:text-black">
-        <header className="border-b border-border pb-5 print:border-black/20">
-          <h1 className="text-2xl font-bold tracking-tight">{lang === "bn" ? member.fullNameBn : member.fullNameEn}</h1>
-          <p className="text-sm text-muted-foreground print:text-black/70">
-            {lang === "bn" ? member.fullNameEn : member.fullNameBn}
-          </p>
-          <p className="mt-3 text-sm font-medium">
-            {tx(member.designation)} · {member.mediaHouse}
-          </p>
-          <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground print:text-black/70">
-            <div>
-              <dt className="inline font-semibold">{t("member.membershipId")}: </dt>
-              <dd className="inline">{member.membershipId ?? "—"}</dd>
-            </div>
+        <header className="flex items-start gap-5 border-b border-border pb-5 print:border-black/20">
+          <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-white ring-1 ring-border">
+            <Image src={LOGO_SRC} alt="" width={64} height={64} className="h-16 w-16 object-contain p-[7%]" unoptimized />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-bold tracking-tight">{lang === "bn" ? member.fullNameBn : member.fullNameEn}</h1>
+            <p className="text-sm text-muted-foreground print:text-black/70">
+              {lang === "bn" ? member.fullNameEn : member.fullNameBn}
+            </p>
+            <p className="mt-2 text-sm font-medium">
+              {tx(member.designation)} · {member.mediaHouse}
+            </p>
+          </div>
+        </header>
+
+        <dl className="mt-4 grid grid-cols-2 gap-2 text-xs text-muted-foreground print:text-black/70">
+          <div>
+            <dt className="inline font-semibold">{t("member.membershipId")}: </dt>
+            <dd className="inline">{member.membershipId ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold">{t("members.card.rank")}: </dt>
+            <dd className="inline">{member.rankOrder ? rankLabel(member.rankOrder, lang) : "—"}</dd>
+          </div>
+          <div>
+            <dt className="inline font-semibold">{t("member.location")}: </dt>
+            <dd className="inline">{member.location ?? "Dhaka, Bangladesh"}</dd>
+          </div>
+          {member.yearsExperience > 0 ? (
             <div>
               <dt className="inline font-semibold">{t("member.experience")}: </dt>
               <dd className="inline">{experienceLabel(member.yearsExperience, lang)}</dd>
             </div>
-            <div>
-              <dt className="inline font-semibold">{t("member.location")}: </dt>
-              <dd className="inline">{member.location ?? "Dhaka, Bangladesh"}</dd>
-            </div>
-            <div>
-              <dt className="inline font-semibold">{t("members.card.rank")}: </dt>
-              <dd className="inline">{member.rankOrder ?? "—"}</dd>
-            </div>
-          </dl>
-        </header>
+          ) : null}
+        </dl>
 
         <section className="mt-5">
           <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
@@ -77,39 +87,47 @@ export function MemberCvView({ member }: { member: Member }) {
           <p className="mt-2 text-sm leading-relaxed">{tx(member.bio)}</p>
         </section>
 
-        <section className="mt-6">
-          <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
-            {t("member.timeline")}
-          </h2>
-          <ul className="mt-3 space-y-3">
-            {member.workHistory.map((item) => (
-              <li key={item.id} className="text-sm">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <span className="font-semibold">{tx(item.role)}</span>
-                  <span className="text-xs text-muted-foreground print:text-black/60">
-                    {formatYearRange(item.startYear, item.endYear, lang)}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground print:text-black/70">{item.organization}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {member.workHistory.length > 0 ? (
+          <section className="mt-6">
+            <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
+              {t("member.timeline")}
+            </h2>
+            <ul className="mt-3 space-y-3">
+              {member.workHistory.map((item) => (
+                <li key={item.id} className="text-sm">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="font-semibold">{tx(item.role)}</span>
+                    <span className="text-xs text-muted-foreground print:text-black/60">
+                      {formatYearRange(item.startYear, item.endYear, lang)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground print:text-black/70">{item.organization}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
-        <section className="mt-6 grid gap-5 sm:grid-cols-2">
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
-              {t("member.skills")}
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed">{member.skills.map((skill) => tx(skill)).join(" · ")}</p>
-          </div>
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
-              {t("member.tools")}
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed">{member.tools.join(" · ")}</p>
-          </div>
-        </section>
+        {member.skills.length > 0 || member.tools.length > 0 ? (
+          <section className="mt-6 grid gap-5 sm:grid-cols-2">
+            {member.skills.length > 0 ? (
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
+                  {t("member.skills")}
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed">{member.skills.map((skill) => tx(skill)).join(" · ")}</p>
+              </div>
+            ) : null}
+            {member.tools.length > 0 ? (
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
+                  {t("member.tools")}
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed">{member.tools.join(" · ")}</p>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
         {member.showreelUrl ? (
           <section className="mt-6">
@@ -123,7 +141,7 @@ export function MemberCvView({ member }: { member: Member }) {
         ) : null}
 
         <footer className="mt-8 border-t border-border pt-4 text-[0.7rem] leading-relaxed text-muted-foreground print:border-black/20 print:text-black/60">
-          {t("brand.name")} · {t("member.cv.note")}
+          {t("brand.name")} · {t("brand.orgBn")} · {t("member.cv.note")}
         </footer>
       </article>
     </div>

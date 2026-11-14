@@ -159,9 +159,7 @@ export function MembersDirectoryView({ members }: { members: Member[] }) {
         )}
 
         <p className="mt-8 text-xs leading-relaxed text-muted-foreground">
-          {lang === "bn"
-            ? "তালিকাটি কমিটি নির্ধারিত র‍্যাংক অনুসারে সাজানো। প্রতিটি প্রোফাইল অনুমোদিত সদস্যদের নিয়ে গঠিত।"
-            : "Profiles are ordered by the committee-assigned rank. Only approved members appear in the public directory."}
+          {t("members.note")}
         </p>
       </section>
     </>

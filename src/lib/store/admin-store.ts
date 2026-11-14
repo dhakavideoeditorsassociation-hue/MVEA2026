@@ -5,6 +5,7 @@ import type {
   CmsPost,
   MembershipApplication,
   PressArticle,
+  PressRelease,
   RecruiterInquiry,
 } from "@/lib/types";
 
@@ -18,12 +19,13 @@ import type {
  * or durable data.
  */
 
-const DB_KEY = "gvea.demo.db.v1";
+const DB_KEY = "***";
 
 type DemoDb = {
   applications: MembershipApplication[];
   inquiries: RecruiterInquiry[];
   press: PressArticle[];
+  pressReleases: PressRelease[];
   posts: CmsPost[];
   heroVisibility: Record<string, boolean>;
   heroOrder: string[];
@@ -35,32 +37,26 @@ function nowIso() {
 }
 
 function seedDb(): DemoDb {
-  const pending: MembershipApplication[] = [
+  const sampleApplications: MembershipApplication[] = [
     {
       uid: "demo-app-sumaiya",
       email: "sumaiya.akter@example.com",
       fullNameBn: "সুমাইয়া আক্তার",
       fullNameEn: "Sumaiya Akter",
       phone: "+880 1712 345678",
-      photoUrl: "https://i.pravatar.cc/480?img=32",
+      photoUrl: "",
       mediaHouse: "Ekattor TV",
       designation: "News Package Editor",
       yearsExperience: 6,
       workHistory: [
-        {
-          id: "wh-1",
-          organization: "Ekattor TV",
-          role: "News Package Editor",
-          startYear: "2021",
-          endYear: "",
-        },
+        { id: "wh-1", organization: "Ekattor TV", role: "News Package Editor", startYear: "2021", endYear: "" },
         { id: "wh-2", organization: "Boishakhi TV", role: "Junior Editor", startYear: "2019", endYear: "2021" },
       ],
       skills: ["News packages", "Natural sound", "Bangla typography"],
       tools: ["Adobe Premiere Pro", "Adobe Audition"],
       showreelUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-      facebook: "https://www.facebook.com/",
-      linkedin: "https://www.linkedin.com/",
+      facebook: "",
+      linkedin: "",
       youtube: "",
       cvUrl: "",
       bio: "I cut daily news packages and short field features for the evening bulletin.",
@@ -76,7 +72,7 @@ function seedDb(): DemoDb {
       fullNameBn: "রাশেদ করিম",
       fullNameEn: "Rashed Karim",
       phone: "+880 1811 223344",
-      photoUrl: "https://i.pravatar.cc/480?img=53",
+      photoUrl: "",
       mediaHouse: "Channel 24",
       designation: "Senior Editor",
       yearsExperience: 9,
@@ -98,44 +94,42 @@ function seedDb(): DemoDb {
       submittedAt: "2026-11-11T09:05:00+06:00",
       updatedAt: "2026-11-11T09:05:00+06:00",
     },
+    {
+      uid: "demo-editor",
+      email: "editor@mvea.org",
+      fullNameBn: "ডেমো এডিটর",
+      fullNameEn: "Demo Editor",
+      phone: "+880 1700 000000",
+      photoUrl: "",
+      mediaHouse: "Daily Bangladesh Media",
+      designation: "Video Editor",
+      yearsExperience: 4,
+      workHistory: [
+        { id: "wh-seed-1", organization: "Daily Bangladesh Media", role: "Video Editor", startYear: "2022", endYear: "" },
+      ],
+      skills: ["News editing", "Motion graphics"],
+      tools: ["Adobe Premiere Pro", "After Effects"],
+      showreelUrl: "",
+      facebook: "",
+      linkedin: "",
+      youtube: "",
+      cvUrl: "",
+      bio: "Demo account pre-filled so the membership form can be tried end to end.",
+      status: "draft",
+      membershipId: null,
+      rankOrder: null,
+      submittedAt: null,
+      updatedAt: "2026-11-12T09:00:00+06:00",
+    },
   ];
 
   return {
-    applications: [
-      {
-        uid: "demo-editor",
-        email: "editor@gvea.org",
-        fullNameBn: "ডেমো এডিটর",
-        fullNameEn: "Demo Editor",
-        phone: "+880 1700 000000",
-        photoUrl: "",
-        mediaHouse: "Channel i",
-        designation: "News Editor",
-        yearsExperience: 6,
-        workHistory: [
-          { id: "wh-seed-1", organization: "Channel i", role: "News Editor", startYear: "2021", endYear: "" },
-        ],
-        skills: ["News editing", "Sound design"],
-        tools: ["Adobe Premiere Pro"],
-        showreelUrl: "",
-        facebook: "",
-        linkedin: "",
-        youtube: "",
-        cvUrl: "",
-        bio: "Demo account pre-filled so the membership form can be tried end to end.",
-        status: "draft",
-        membershipId: null,
-        rankOrder: null,
-        submittedAt: null,
-        updatedAt: "2026-11-12T09:00:00+06:00",
-      },
-      ...pending,
-    ],
+    applications: sampleApplications,
     inquiries: [
       {
         id: "demo-inquiry-1",
-        memberId: "mem_rafiqul_islam",
-        memberName: "Rafiqul Islam",
+        memberId: "mem_rafid_billah",
+        memberName: "Rafid Billah",
         recruiterName: "Farzana Haque",
         company: "Nexus Media Studio",
         email: "farzana@example.com",
@@ -146,6 +140,7 @@ function seedDb(): DemoDb {
       },
     ],
     press: [],
+    pressReleases: [],
     posts: [],
     heroVisibility: {},
     heroOrder: [],
@@ -253,7 +248,7 @@ export async function reviewApplication(
 
 export function nextMembershipId(existingCount: number): string {
   const year = new Date().getFullYear();
-  return `GVEA-${year}-${String(existingCount + 1).padStart(3, "0")}`;
+  return `MVEA-${year}-${String(existingCount + 1).padStart(3, "0")}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -277,7 +272,7 @@ export function recordLocalInquiry(inquiry: RecruiterInquiry): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Ranking, press, hero and posts                                      */
+/* Committee order, press, releases, hero and articles                 */
 /* ------------------------------------------------------------------ */
 
 export async function setMemberRank(memberId: string, rank: number): Promise<void> {
@@ -306,6 +301,26 @@ export async function addPressArticle(article: PressArticle): Promise<void> {
 
 export function readPressOverrides(): PressArticle[] {
   return readDemoDb().press;
+}
+
+export async function listPressReleases(): Promise<PressRelease[]> {
+  if (isFirebaseConfigured) {
+    const { collection, getDocs } = await import("firebase/firestore");
+    const { getFirebaseDb } = await import("@/lib/firebase");
+    const snapshot = await getDocs(collection(getFirebaseDb(), "press_releases"));
+    return snapshot.docs.map((docSnap) => docSnap.data() as PressRelease);
+  }
+  return readDemoDb().pressReleases;
+}
+
+export async function addPressRelease(release: PressRelease): Promise<void> {
+  if (isFirebaseConfigured) {
+    const { doc, setDoc } = await import("firebase/firestore");
+    const { getFirebaseDb } = await import("@/lib/firebase");
+    await setDoc(doc(getFirebaseDb(), "press_releases", release.id), release);
+    return;
+  }
+  updateDemoDb((db) => ({ ...db, pressReleases: [release, ...db.pressReleases] }));
 }
 
 export async function setHeroVisibility(slideId: string, visible: boolean): Promise<void> {

@@ -1,15 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
-  Calendar,
+  CalendarDays,
   Clapperboard,
+  FileText,
   GraduationCap,
-  Palette,
   ShieldCheck,
+  Users,
   Wrench,
 } from "lucide-react";
 
@@ -18,18 +18,28 @@ import { HeroCarousel } from "@/components/home/hero-carousel";
 import { MemberCard } from "@/components/members/member-card";
 import { PostCard } from "@/components/programs/post-card";
 import { PressCard } from "@/components/press/press-card";
+import { PressReleaseCard } from "@/components/press/press-release-card";
 import { buttonVariants } from "@/components/ui/button";
-import { useI18n } from "@/lib/i18n/provider";
+import { formatDate } from "@/lib/format";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
-import type { AssociationStat, CmsPost, CommitteeMember, HeroSlide, Member, PressArticle } from "@/lib/types";
+import { useI18n } from "@/lib/i18n/provider";
+import type {
+  AssociationStat,
+  CmsPost,
+  CommitteeMember,
+  HeroSlide,
+  Member,
+  PressArticle,
+  PressRelease,
+} from "@/lib/types";
 
-const PILLARS: Array<{ key: string; Icon: typeof Calendar; title: TranslationKey; desc: TranslationKey }> = [
-  { key: "market", Icon: Calendar, title: "pillar.market.title", desc: "pillar.market.desc" },
-  { key: "tools", Icon: Wrench, title: "pillar.tools.title", desc: "pillar.tools.desc" },
-  { key: "workshops", Icon: GraduationCap, title: "pillar.workshop.title", desc: "pillar.workshop.desc" },
+const PILLARS: Array<{ key: string; Icon: typeof Users; title: TranslationKey; desc: TranslationKey }> = [
+  { key: "rights", Icon: Users, title: "pillar.rights.title", desc: "pillar.rights.desc" },
+  { key: "pipeline", Icon: Wrench, title: "pillar.pipeline.title", desc: "pillar.pipeline.desc" },
+  { key: "lab", Icon: GraduationCap, title: "pillar.lab.title", desc: "pillar.lab.desc" },
   { key: "ethics", Icon: ShieldCheck, title: "pillar.ethics.title", desc: "pillar.ethics.desc" },
   { key: "storytelling", Icon: Clapperboard, title: "pillar.storytelling.title", desc: "pillar.storytelling.desc" },
-  { key: "creativity", Icon: Palette, title: "pillar.creativity.title", desc: "pillar.creativity.desc" },
+  { key: "archive", Icon: FileText, title: "pillar.archive.title", desc: "pillar.archive.desc" },
 ];
 
 type HomeViewProps = {
@@ -37,12 +47,13 @@ type HomeViewProps = {
   stats: AssociationStat[];
   featured: Member[];
   press: PressArticle[];
+  releases: PressRelease[];
   posts: CmsPost[];
   committee: CommitteeMember[];
 };
 
-export function HomeView({ slides, stats, featured, press, posts, committee }: HomeViewProps) {
-  const { t, tx } = useI18n();
+export function HomeView({ slides, stats, featured, press, releases, posts, committee }: HomeViewProps) {
+  const { t, tx, lang } = useI18n();
 
   return (
     <>
@@ -115,49 +126,78 @@ export function HomeView({ slides, stats, featured, press, posts, committee }: H
         </div>
       </section>
 
-      <section className="border-y border-border bg-muted/25">
-        <div className="container py-16 lg:py-20">
-          <SectionHeading
-            eyebrow={t("home.programs.eyebrow")}
-            title={t("home.programs.title")}
-            subtitle={t("home.programs.subtitle")}
-            action={{ href: "/programs", label: t("home.programs.cta") }}
-          />
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+      {releases.length > 0 ? (
+        <section id="press-releases" className="border-y border-border bg-muted/25">
+          <div className="container py-16 lg:py-20">
+            <SectionHeading
+              eyebrow={t("home.releases.eyebrow")}
+              title={t("home.releases.title")}
+              subtitle={t("home.releases.subtitle")}
+              action={{ href: "/media-coverage#press-releases", label: t("home.releases.cta") }}
+            />
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {releases.map((release) => (
+                <PressReleaseCard key={release.id} release={release} />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <section className="container py-16 lg:py-20">
         <SectionHeading
-          eyebrow={t("home.committee.eyebrow")}
-          title={t("home.committee.title")}
-          subtitle={t("home.committee.subtitle")}
-          action={{ href: "/committee", label: t("home.committee.cta") }}
+          eyebrow={t("home.programs.eyebrow")}
+          title={t("home.programs.title")}
+          subtitle={t("home.programs.subtitle")}
+          action={{ href: "/programs", label: t("home.programs.cta") }}
         />
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {committee.map((person) => (
-            <div
-              key={person.id}
-              className="rounded-lg border border-border bg-card p-3 text-center shadow-card transition-colors hover:border-primary/40"
-            >
-              <span className="relative mx-auto block h-16 w-16 overflow-hidden rounded-full bg-muted ring-2 ring-border">
-                <Image src={person.photoUrl} alt={tx(person.name)} fill sizes="64px" className="object-cover" />
-              </span>
-              <p className="mt-3 text-sm font-semibold leading-snug text-foreground">{tx(person.name)}</p>
-              <p className="mt-0.5 text-[0.7rem] font-medium uppercase tracking-[0.1em] text-primary">
-                {tx(person.role)}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">{person.mediaHouse}</p>
-            </div>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} />
           ))}
         </div>
       </section>
 
-      <section className="container pb-20">
+      <section className="border-y border-border bg-muted/25">
+        <div className="container py-16 lg:py-20">
+          <SectionHeading
+            eyebrow={t("home.committee.eyebrow")}
+            title={t("home.committee.title")}
+            subtitle={t("home.committee.subtitle")}
+            action={{ href: "/committee", label: t("home.committee.cta") }}
+          />
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {committee.map((person) => (
+              <div
+                key={person.id}
+                className="rounded-lg border border-border bg-card p-3 text-center shadow-card transition-colors hover:border-primary/40"
+              >
+                <span className="relative mx-auto grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-muted text-lg font-bold text-primary ring-2 ring-border">
+                  {person.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={person.photoUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    (lang === "bn" ? person.name.bn : person.name.en)
+                      .split(" ")
+                      .slice(0, 2)
+                      .map((part) => part.charAt(0))
+                      .join("")
+                  )}
+                </span>
+                <p className="mt-3 text-sm font-semibold leading-snug text-foreground">{tx(person.name)}</p>
+                <p className="mt-0.5 text-[0.7rem] font-medium uppercase tracking-[0.1em] text-primary">{tx(person.role)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{person.mediaHouse}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 inline-flex items-center gap-2 text-xs text-muted-foreground">
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+            {t("committee.formerInfo")}: {formatDate("2026-03-13", lang)}
+          </p>
+        </div>
+      </section>
+
+      <section className="container pb-20 pt-16">
         <div className="relative overflow-hidden rounded-xl border border-primary/25 bg-gradient-to-br from-primary/12 via-card to-card p-8 sm:p-12">
           <span className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/15 blur-3xl" aria-hidden />
           <div className="relative flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
@@ -170,7 +210,7 @@ export function HomeView({ slides, stats, featured, press, posts, committee }: H
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Link href="/login" className={buttonVariants({ size: "lg" })}>
+              <Link href="/register" className={buttonVariants({ size: "lg" })}>
                 {t("home.cta.primary")}
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>

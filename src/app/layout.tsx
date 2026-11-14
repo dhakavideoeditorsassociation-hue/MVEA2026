@@ -22,16 +22,16 @@ const hindSiliguri = Hind_Siliguri({
 });
 
 const SITE_NAME = "গণমাধ্যম ভিডিও এডিটরস অ্যাসোসিয়েশন";
-const SITE_NAME_EN = "Gonomadhyam Video Editor Association";
+const SITE_NAME_EN = "Media Video Editors Association";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://gonomadhyam-editors.vercel.app"),
+  metadataBase: new URL("https://mveabd.vercel.app"),
   title: {
     default: `${SITE_NAME} | ${SITE_NAME_EN}`,
     template: `%s | ${SITE_NAME_EN}`,
   },
   description:
-    "The professional association for television, broadcast and multimedia video editors in Bangladesh. Verified member directory, workshops, ethics code and press coverage.",
+    "The national platform for media video editors and visualizers in Bangladesh: verified member directory, newsroom labs, visual journalism ethics and press coverage.",
   keywords: [
     "video editor association Bangladesh",
     "broadcast editor",
@@ -47,12 +47,12 @@ export const metadata: Metadata = {
     siteName: SITE_NAME_EN,
     title: `${SITE_NAME} | ${SITE_NAME_EN}`,
     description:
-      "Verified video editors, hands-on workshops and a shared ethics code for Bangladeshi broadcast newsrooms.",
+      "Verified video editors, newsroom labs and a shared ethics code for Bangladeshi broadcast and digital newsrooms.",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1200&q=80",
-        width: 1200,
-        height: 630,
+        url: "/logo.png",
+        width: 1250,
+        height: 1250,
         alt: SITE_NAME_EN,
       },
     ],
@@ -60,7 +60,12 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: `${SITE_NAME} | ${SITE_NAME_EN}`,
-    description: "Verified video editors, workshops and ethics guidance for Bangladeshi broadcast media.",
+    description: "Verified video editors, newsroom labs and ethics guidance for Bangladeshi broadcast and digital media.",
+  },
+  icons: {
+    icon: [{ url: "/favicon.ico", sizes: "any" }],
+    shortcut: ["/favicon.ico"],
+    apple: [{ url: "/logo.png", sizes: "180x180" }],
   },
   robots: { index: true, follow: true },
 };

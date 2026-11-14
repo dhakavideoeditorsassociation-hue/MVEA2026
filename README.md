@@ -1,20 +1,44 @@
-# Gonomadhyam Video Editor Association
+# Media Video Editors Association (MVEA)
 
-গণমাধ্যম ভিডিও এডিটরস অ্যাসোসিয়েশন — the official web platform of the association of
-television, broadcast and multimedia video editors of Bangladesh.
+গণমাধ্যম ভিডিও এডিটরস অ্যাসোসিয়েশন — the national platform for media video editors and
+visualizers in Bangladesh: television, national dailies and digital newsrooms.
 
-A production-shaped Next.js application with three surfaces:
+Three surfaces in one Next.js application:
 
-1. **Public site** — ranked member directory, Behance-style CV profiles, workshops and
-   resources, press coverage, ethics code, executive committee.
+1. **Public site** — editorial hero, six profession pillars, 31-member Convener Committee,
+   members directory and CV profiles, real newspaper coverage, Facebook press releases,
+   articles & features, ethics code.
 2. **Member portal** — Firebase-authenticated membership application, CV upload, showreel,
    application status tracking.
-3. **Admin dashboard** — application review with membership-ID generation, ranking engine,
-   press importer that scrapes OpenGraph data from any newspaper URL, hero-slider visibility,
-   recruiter inquiries and a light CMS.
+3. **Admin dashboard** — application review with MVEA membership IDs, committee order,
+   newspaper link importer, **Facebook press-release importer with manual override**,
+   recruiter inquiries, hero-slider visibility and the articles CMS.
 
-Everything is designed to run on **free tiers only**: Vercel (hosting), GitHub (source),
-Firebase Spark (auth + Firestore) and Cloudinary (unsigned uploads).
+Designed for free tiers only: Vercel (hosting), GitHub (source), Firebase Spark
+(auth + Firestore) and Cloudinary (unsigned uploads).
+
+---
+
+## Data in this build
+
+The seed dataset is official association data, not placeholder copy:
+
+- **31-member Convener Committee**, formed 13 March 2026 — convener, seven joint conveners,
+  member secretary and 22 members, each with their media house.
+- **Three real national press reports**, fetched live and linked to the publishers:
+  Daily Samakal (`samakal.com/bangladesh/article/342736`), Banglanews24
+  (`banglanews24.com/national/news/bd/1642621.details`) and Daily Jugantor
+  (`jugantor.com/capital/1054033`). Titles, excerpts, thumbnails and publish dates were read
+  from each article's OpenGraph metadata.
+- **Facebook press releases** pointing at
+  `facebook.com/MediaVideoEditorsAssociation`.
+- **Four editorial articles** (feature, guide, workshop, ethics) written for the craft.
+- Contact: `dhakavideoeditorsassociation@gmail.com`, `+8801957-452277`, `+8801763-234375`,
+  Dhaka, Bangladesh.
+
+Career histories, showreels and skill lists are **not invented**. Individual members have no
+portrait on file yet, so profiles render initials and display a "career details are being
+verified" notice until the editor completes their dashboard profile.
 
 ---
 
@@ -24,12 +48,12 @@ Firebase Spark (auth + Firestore) and Cloudinary (unsigned uploads).
 | --- | --- |
 | Framework | Next.js 14 (App Router) + React 18 + TypeScript (strict) |
 | Styling | Tailwind CSS 3, hand-built shadcn-style primitives (cva + tailwind-merge) |
-| Motion | Framer Motion (hero carousel, subtle page motion, reduced-motion aware) |
+| Motion | Framer Motion (hero backdrop rotation, reduced-motion aware) |
 | Icons | Lucide React |
 | Fonts | `next/font/google` — Hind Siliguri (Bangla) + Inter (Latin) |
 | Backend | Firebase 10 (Auth, Firestore) — optional at runtime |
 | Uploads | Cloudinary unsigned preset — optional at runtime |
-| Metadata | `/api/fetch-og` route (cheerio) with SSRF guard |
+| Link previews | `/api/fetch-og` and `/api/link-preview` (cheerio, SSRF guarded) |
 
 ---
 
@@ -41,33 +65,28 @@ npm run dev          # http://localhost:3000
 ```
 
 No environment variables are required. The app starts in **demo mode**: seed content,
-browser-local accounts, browser-local admin edits. Copy `.env.example` to `.env.local`
-when you want the real services.
+browser-local accounts, browser-local admin edits. Copy `.env.example` to `.env.local` when
+you want real services.
 
 ```bash
-npm run build        # production build (prerenders every public route)
-npm run start        # serve the production build
+npm run build        # production build (prerenders 31 member + 31 CV + 4 article pages)
+npm run start
 npm run typecheck    # tsc --noEmit
-npm run lint         # next lint
+npm run lint
 ```
 
 ### Demo accounts
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Admin | `admin@gvea.org` | `Gvea@2026` |
-| Member | `editor@gvea.org` | `Gvea@2026` |
+| Admin | `admin@mvea.org` | `Mvea@2026` |
+| Member | `editor@mvea.org` | `Mvea@2026` |
 
-The login screen has one-click buttons that fill these credentials.
+The login screen has one-click buttons for both.
 
-**Demo mode behaviour**
-
-- Accounts, applications, admin edits, shortlists and press imports live in `localStorage`
-  of the current browser. They are not shared and are not visible to other visitors.
-- Approved members come from `src/data/seed.ts`; approving an application in the demo
-  dashboard assigns a membership ID but does not rewrite the seeded public directory.
-- Every demo surface shows a banner saying so, so nothing is presented as durable data.
-- Set the Firebase variables and the same UI talks to Firestore instead — no page code changes.
+**Demo mode behaviour:** accounts, applications, admin edits and imports live in this
+browser's `localStorage`. Nothing is shared, and every affected screen shows a banner saying
+so. Set the Firebase variables and the same UI persists to Firestore instead.
 
 ---
 
@@ -75,93 +94,111 @@ The login screen has one-click buttons that fill these credentials.
 
 | Route | Description |
 | --- | --- |
-| `/` | Hero carousel, six pillars, featured ranked members, press grid, latest programs, committee strip |
-| `/members` | Searchable directory, ordered by committee rank, filters by media house / skill / experience |
-| `/members/[slug]` | Digital CV: bio, career timeline, skills, tools, embedded showreel, recruiter actions |
-| `/members/[slug]/cv` | Print-first CV (browser print → PDF); `?print=1` opens the dialog automatically |
-| `/programs` | Workshops, market updates, software notes, ethics and storytelling resources with category tabs |
-| `/programs/[slug]` | Resource detail with related items |
-| `/media-coverage` | Press grid, every card opens the original publisher in a new tab |
+| `/` | Editorial hero + rotating programme backdrop, six pillars, featured committee members, press grid, Facebook press releases, articles, committee strip, join CTA |
+| `/members` | Directory of the 31 committee members with search and media-house / skill / experience filters |
+| `/members/[slug]` | Profile: role, media house, factual bio, showreel, timeline, skills, recruiter actions, CV download |
+| `/members/[slug]/cv` | Print-first CV with the association emblem; `?print=1` opens the print dialog |
+| `/programs` | Articles & features with category tabs (feature, interview, guide, workshop, ethics) |
+| `/programs/[slug]` | Article detail with related items |
+| `/media-coverage` | Real press coverage + Facebook press releases (`#press-releases`) |
 | `/about` | Mission, six-point ethics code, member benefits, FAQ |
-| `/committee` | Executive committee grid |
-| `/login`, `/register` | Email/password auth, Google sign-in when Firebase is configured |
-| `/dashboard` | Membership application form, status, membership ID, draft saving |
-| `/admin` | Role-guarded control room (applications, ranking, press, inquiries, hero, programs) |
-| `/api/fetch-og` | `POST { url }` → OpenGraph title, description, image, site name, publish date |
-| `/api/recruiter-inquiries` | `POST` validated hiring inquiry (Firestore-ready payload) |
+| `/committee` | Convener panel and the 22 members |
+| `/login`, `/register` | Email/password + Google (Google needs Firebase) |
+| `/dashboard` | Membership form, draft save, submit, status and MVEA membership ID |
+| `/admin` | Role-guarded control room: applications, committee order, media coverage, press releases, inquiries, hero, articles |
+| `/api/fetch-og` | `POST { url }` → OpenGraph preview for newspaper links |
+| `/api/link-preview` | Same extractor tuned for Facebook posts: returns `code: "blocked"` when Facebook walls the request so the admin can override manually |
+| `/api/recruiter-inquiries` | Validated hiring inquiry |
 
-Both languages (বাংলা / English) and both themes (broadcast dark / editorial light) are
-toggled from the header; the preference is stored per browser.
+Bangla / English and dark / light are toggled from the header; the preference is per browser.
+
+---
+
+## Logo and favicon
+
+The official emblem (`MVEA Red LOGO.png`, 1250x1250, transparent background) is installed as:
+
+| Asset | Path | Used by |
+| --- | --- | --- |
+| Emblem | `public/logo.png` | navbar, footer, login/register, CV header, press-release fallback, OG metadata |
+| Favicon | `public/favicon.ico` and `src/app/favicon.ico` | multi-size ICO (16/32/48/64/128/256) generated from the PNG |
+| App icon | `src/app/icon.png` | Next.js icon route and Apple touch icon |
+
+The path is read from a single constant, `LOGO_SRC` in `src/lib/brand.ts`. Because the artwork
+has a transparent background, it is placed on a white circular chip with a thin border so the
+red ring and black film strip stay legible in both the dark and light themes, and the ribbon
+tips are never clipped. Replacing the artwork later means overwriting `public/logo.png` (and
+regenerating the ICO) — no component changes are needed.
+
+---
+
+## Press releases (Facebook)
+
+`/api/link-preview` accepts `facebook.com` post/photo/reel/share URLs (normalising
+`m.`/`web.`/`mbasic.` hosts), fetches the page server-side and extracts `og:title`,
+`og:description`, `og:image` and publish time.
+
+Facebook normally answers server requests with HTTP 400/403/429 or a login wall. The route
+detects this and returns:
+
+```json
+{ "ok": false, "status": 422, "code": "blocked",
+  "error": "Facebook returned HTTP 400.", "hint": "Use the manual fields in the admin form." }
+```
+
+The admin **Press releases** tab then keeps the same form open so the secretariat can type the
+headline/excerpt and upload the thumbnail (Cloudinary in production, object URL in demo mode)
+before publishing to the `press_releases` collection. Cards show the thumbnail, an
+"Official statement on Facebook" badge, and link to the statement in a new tab; without an
+image the emblem is used.
 
 ---
 
 ## Firebase setup (free Spark plan)
 
-1. Create a project at <https://console.firebase.google.com> (Google Analytics not required).
-2. **Add app → Web**, then copy the config values into `.env.local`
-   (`NEXT_PUBLIC_FIREBASE_*`).
-3. **Authentication → Sign-in method**: enable *Email/Password* and *Google*.
-   Add your Vercel domain under *Authorized domains*.
-4. **Firestore Database → Create database** (production mode, nearest region).
+1. Create a project at <https://console.firebase.google.com>.
+2. **Add app → Web**, copy the config into `.env.local` (`NEXT_PUBLIC_FIREBASE_*`).
+3. **Authentication → Sign-in method**: enable Email/Password and Google; add your Vercel
+   domain to authorised domains.
+4. **Firestore → Create database** (production mode).
 5. Deploy the rules in this repository:
 
    ```bash
    npm install -g firebase-tools
    firebase login
-   firebase init firestore   # choose the existing project, keep firestore.rules
+   firebase init firestore      # existing project, keep firestore.rules
    firebase deploy --only firestore:rules
    ```
 
-   `storage.rules` is included if you prefer Firebase Storage over Cloudinary
-   (`firebase deploy --only storage`).
-6. **Create the first admin**: register through `/register`, then open
-   *Firestore → users → your uid* and add `role: "admin"` to the document.
-   Reload the site — the admin link appears in the header and `/admin` becomes accessible.
+   `storage.rules` is included if you prefer Firebase Storage over Cloudinary.
+6. **First admin**: register on `/register`, then set `users/{uid}.role = "admin"` in Firestore.
 
-Collections used: `users`, `applications`, `members`, `hero_slides`, `press_articles`,
-`cms_posts`, `committee`, `association`, `recruiter_inquiries`.
+Collections: `users`, `applications`, `members`, `hero_slides`, `press_articles`,
+`press_releases`, `cms_posts`, `committee`, `association`, `recruiter_inquiries`.
 
-### Roles
+Rules enforce that members can only edit their own application/profile, can never set
+`membershipId` or `rankOrder`, and cannot promote themselves; only admins publish members,
+press, releases, posts or read inquiries.
 
-`users/{uid}.role` is `member` or `admin`. Rules enforce that a member can only edit their
-own profile and application, can never set `membershipId` or `rankOrder`, and cannot promote
-themselves; only admins can publish members, hero slides, press links, posts or read inquiries.
+### Cloudinary setup
 
----
-
-## Cloudinary setup (free tier)
-
-1. Create an account, note the **cloud name**.
-2. *Settings → Upload → Add upload preset*: signing mode **Unsigned**,
-   folder `gvea`, and allow `auto` format so PDFs are accepted.
-3. Add to `.env.local`:
-
-   ```bash
-   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud
-   NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=gvea_unsigned
-   ```
-
-Without Cloudinary, uploads fall back to browser object URLs (session-only) and the form
-states this explicitly.
+*Settings → Upload → Add upload preset*: signing mode **Unsigned**, folder `gvea`, allow
+`auto`. Then set `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` and
+`NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`. Without it, uploads fall back to session-only object
+URLs and the form says so.
 
 ---
 
 ## Deploy to Vercel via GitHub
 
 ```bash
-git init
-git add .
-git commit -m "feat: GVEA platform"
+git init && git add . && git commit -m "feat: MVEA platform"
 git remote add origin https://github.com/<you>/<repo>.git
 git push -u origin main
 ```
 
-1. <https://vercel.com/new> → import the repository (framework auto-detected as Next.js).
-2. Add the same environment variables under *Settings → Environment Variables*.
-3. Deploy. Add the Vercel domain to Firebase Auth authorised domains, and to
-   `NEXT_PUBLIC_` allowed origins if you restrict the API key.
-
-No custom server, no paid services, no background workers.
+Import the repository at <https://vercel.com/new>, add the same environment variables, deploy.
+Add the production domain to Firebase Auth authorised domains.
 
 ---
 
@@ -170,56 +207,57 @@ No custom server, no paid services, no background workers.
 ```text
 src/
   app/
-    api/fetch-og/route.ts           # OpenGraph importer (SSRF guarded)
-    api/recruiter-inquiries/route.ts
-    about/ committee/ dashboard/ login/ register/ admin/
+    api/{fetch-og,link-preview,recruiter-inquiries}/route.ts
+    about/ admin/ committee/ dashboard/ login/ register/
     members/ members/[slug]/ members/[slug]/cv/
     programs/ programs/[slug]/ media-coverage/
-    layout.tsx globals.css page.tsx not-found.tsx error.tsx loading.tsx
+    icon.svg layout.tsx globals.css page.tsx not-found.tsx error.tsx loading.tsx
   components/
-    admin/ auth/ common/ dashboard/ home/ layout/ members/ press/ programs/ ui/
-  data/seed.ts                      # demo editorial content (members, posts, press, committee)
+    admin/ auth/ common/ committee/ dashboard/ home/ layout/ members/ press/ programs/ ui/
+  data/seed.ts                    # official committee, press, releases, articles, hero slides
   lib/
-    auth/auth-provider.tsx          # Firebase + demo auth behind one context
+    auth/auth-provider.tsx        # Firebase + demo auth behind one context
+    brand.ts                      # LOGO_SRC and the Facebook page URL
     data/{repository,seed-repository,index}.ts
     i18n/{dictionaries,provider}.tsx
-    store/admin-store.ts            # Firestore or browser-local persistence
+    server/link-preview.ts        # shared OpenGraph extractor + SSRF guard
+    store/admin-store.ts          # Firestore or browser-local persistence
     categories.ts firebase.ts format.ts media.ts types.ts upload.ts utils.ts
-firestore.rules storage.rules .env.example
+public/logo.svg  firestore.rules  storage.rules  .env.example
 ```
 
 ### Design notes
 
-- **Localized content, typed keys.** Content records carry `{ bn, en }` fields; chrome uses
-  a flat typed dictionary (`TranslationKey`), so a missing Bangla string fails `tsc`.
-- **Repository seam.** Pages only call `repo` (`src/lib/data`). Swapping the seed repository
-  for a Firestore one requires no page changes.
-- **No binary assets.** Photographs and covers use remote URLs declared in
-  `next.config.mjs` (`remotePatterns` allows any host) so scraped newspaper thumbnails work.
-- **CV without files.** The "Download official CV (PDF)" action opens a print-optimised page;
-  the browser produces the PDF. Member-uploaded PDFs take priority when present.
-- **SSRF guard.** `/api/fetch-og` rejects non-http(s) schemes, credentials in URLs,
-  non-standard ports, private/loopback/link-local/CGNAT hosts, and re-checks the final URL
-  after redirects. It caps response size at 1.5 MB and times out after 8 s.
-- **Reduced motion.** Autoplay and drag are disabled when `prefers-reduced-motion` is set.
+- **Typed bilingual dictionary.** A missing Bangla string fails `tsc`; content records carry
+  `{ bn, en }` fields.
+- **Repository seam.** Pages only call `repo`, so a Firestore repository can replace the seed
+  one without touching pages.
+- **Initials avatars.** No portraits are invented: `Avatar` renders initials until a member
+  uploads a photo.
+- **CV without binaries.** "Download official CV" opens the print-optimised page; the browser
+  produces the PDF. An uploaded PDF takes priority when present.
+- **SSRF guard.** Both preview routes reject non-http(s) schemes, credentials in URLs,
+  non-standard ports, private/loopback/link-local/CGNAT hosts, and re-check the final URL
+  after redirects; responses are capped at 1.5 MB with a 9 s timeout.
 
 ---
 
-## Known limitations / next steps
+## Known limitations
 
-- Demo-mode approvals and edits do not mutate the seeded public pages (no server database yet).
-  Configure Firebase and the same actions persist for everyone.
-- Recruiter inquiries are validated and acknowledged; email delivery (Resend/SendGrid) is a
-  documented next step, and the payload is already Firestore-shaped.
-- Hero slides and programs can be reordered/edited through the API layer; inline drag-and-drop
-  editors are the next UI increment.
-- Unknown `/members/<slug>` and `/programs/<slug>` values render the branded not-found page, but Next
-  caches that render, so the HTTP status stays 200 rather than 404 (soft 404). Add middleware or ISR
-  if a hard 404 matters for crawlers. Genuinely missing top-level routes do return 404.
-- Automated tests are not included; verification is `npm run build`, `npm run typecheck`,
-  `npm run lint` plus route smoke checks.
+- Demo-mode approvals and edits do not rewrite the seeded public pages (no server database
+  yet). Configure Firebase and the same actions persist for everyone.
+- Individual member photos, showreels and career histories are pending — the committee has not
+  supplied them, and they are deliberately not fabricated.
+- Two early vector drafts remain in `public/` (`logo.svg`, `logo-emblem.svg`) and are no longer
+  referenced; they can be deleted.
+- Unknown `/members/<slug>` and `/programs/<slug>` values render the branded not-found page,
+  but Next caches that render so the status stays 200 (soft 404); genuinely missing top-level
+  routes return 404.
+- Facebook scraping is best-effort by design; the manual override in the admin form is the
+  supported path when Meta blocks the request.
+- No automated test suite; verification is `npm run build`, `npm run typecheck`,
+  `npm run lint` and route smoke checks.
 
 ## License
 
-© Gonomadhyam Video Editor Association. Demo editorial content is illustrative; replace it
-with committee-approved material before going live.
+© Media Video Editors Association / গণমাধ্যম ভিডিও এডিটরস অ্যাসোসিয়েশন.

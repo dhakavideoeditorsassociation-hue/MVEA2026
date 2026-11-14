@@ -1,14 +1,53 @@
 "use client";
 
-import Image from "next/image";
-import { Mail, Users } from "lucide-react";
+import { Users } from "lucide-react";
 
+import { Avatar } from "@/components/common/avatar";
 import { PageHero } from "@/components/common/page-hero";
 import { useI18n } from "@/lib/i18n/provider";
 import type { CommitteeMember } from "@/lib/types";
 
+function MemberTile({ person, prominent = false }: { person: CommitteeMember; prominent?: boolean }) {
+  const { tx, lang } = useI18n();
+  const name = lang === "bn" ? person.name.bn : person.name.en;
+
+  return (
+    <article
+      className={
+        prominent
+          ? "group flex items-start gap-4 rounded-lg border border-primary/25 bg-card p-4 shadow-card transition-all duration-300 ease-smooth hover:-translate-y-1 hover:border-primary/50"
+          : "group flex items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-card transition-colors hover:border-primary/40"
+      }
+    >
+      <span
+        className={
+          prominent
+            ? "relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-muted text-xl ring-2 ring-primary/25"
+            : "relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-muted text-sm ring-1 ring-border"
+        }
+      >
+        <Avatar
+          name={name}
+          src={person.photoUrl}
+          sizes={prominent ? "64px" : "44px"}
+          textClassName={prominent ? "text-lg" : "text-xs"}
+        />
+      </span>
+      <div className="min-w-0">
+        <h2 className={prominent ? "text-base font-semibold leading-snug text-foreground" : "text-sm font-semibold leading-snug text-foreground"}>
+          {tx(person.name)}
+        </h2>
+        <p className="mt-0.5 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-primary">{tx(person.role)}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{person.mediaHouse}</p>
+      </div>
+    </article>
+  );
+}
+
 export function CommitteeView({ committee }: { committee: CommitteeMember[] }) {
-  const { t, tx } = useI18n();
+  const { t } = useI18n();
+  const leadership = committee.filter((person) => person.roleType !== "member");
+  const members = committee.filter((person) => person.roleType === "member");
 
   return (
     <>
@@ -24,41 +63,32 @@ export function CommitteeView({ committee }: { committee: CommitteeMember[] }) {
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("committee.empty.body")}</p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {committee.map((person, index) => (
-              <article
-                key={person.id}
-                className="group flex items-start gap-4 rounded-lg border border-border bg-card p-4 shadow-card transition-all duration-300 ease-smooth hover:-translate-y-1 hover:border-primary/40"
-              >
-                <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border">
-                  <Image
-                    src={person.photoUrl}
-                    alt={tx(person.name)}
-                    fill
-                    sizes="64px"
-                    priority={index < 3}
-                    className="object-cover transition-transform duration-500 ease-smooth group-hover:scale-105"
-                  />
-                </span>
-                <div className="min-w-0">
-                  <h2 className="text-base font-semibold leading-snug text-foreground">{tx(person.name)}</h2>
-                  <p className="mt-0.5 text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-primary">
-                    {tx(person.role)}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">{person.mediaHouse}</p>
-                  {person.email ? (
-                    <a
-                      href={`mailto:${person.email}`}
-                      className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
-                      aria-label={`${t("committee.contact")} ${tx(person.name)}`}
-                    >
-                      <Mail className="h-3.5 w-3.5" aria-hidden />
-                      <span dir="ltr">{person.email}</span>
-                    </a>
-                  ) : null}
+          <div className="space-y-12">
+            {leadership.length > 0 ? (
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  {t("committee.group.leadership")}
+                </h2>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {leadership.map((person) => (
+                    <MemberTile key={person.id} person={person} prominent />
+                  ))}
                 </div>
-              </article>
-            ))}
+              </div>
+            ) : null}
+
+            {members.length > 0 ? (
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  {t("committee.group.members")} · {members.length}
+                </h2>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {members.map((person) => (
+                    <MemberTile key={person.id} person={person} />
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
       </section>

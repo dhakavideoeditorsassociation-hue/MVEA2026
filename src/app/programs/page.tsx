@@ -5,9 +5,9 @@ import { repo } from "@/lib/data";
 import { isPostCategory } from "@/lib/categories";
 
 export const metadata: Metadata = {
-  title: "Programs & Workshops",
+  title: "Articles & Features",
   description:
-    "Workshop announcements, software and tool notes, market updates, ethics guidance and storytelling resources from the Gonomadhyam Video Editor Association.",
+    "Craft notes, footage verification guides, visual journalism ethics and newsroom lab announcements published by the Media Video Editors Association.",
   alternates: { canonical: "/programs" },
 };
 

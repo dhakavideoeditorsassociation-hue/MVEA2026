@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, UserPlus } from "lucide-react";
 
+import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/form-controls";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@ export function RegisterView() {
     <div className="container py-12 lg:py-16">
       <div className="mx-auto max-w-lg">
         <div className="rounded-lg border border-border bg-card p-6 shadow-card sm:p-8">
+          <Logo asStatic className="mb-5" size={48} />
           <p className="eyebrow">{t("auth.eyebrow")}</p>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{t("auth.register.title")}</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t("auth.register.subtitle")}</p>

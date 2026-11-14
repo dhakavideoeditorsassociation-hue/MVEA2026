@@ -56,15 +56,15 @@ type DemoUser = {
 const DEFAULT_DEMO_USERS: DemoUser[] = [
   {
     uid: "demo-admin",
-    email: "admin@gvea.org",
-    password: "Gvea@2026",
+    email: "admin@mvea.org",
+    password: "Mvea@2026",
     displayName: "Committee Admin",
     role: "admin",
   },
   {
     uid: "demo-editor",
-    email: "editor@gvea.org",
-    password: "Gvea@2026",
+    email: "editor@mvea.org",
+    password: "Mvea@2026",
     displayName: "Demo Editor",
     role: "member",
   },

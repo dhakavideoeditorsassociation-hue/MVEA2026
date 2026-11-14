@@ -5,9 +5,10 @@ import {
   seedMembers,
   seedPosts,
   seedPress,
+  seedPressReleases,
   seedStats,
 } from "@/data/seed";
-import type { CmsPost, CommitteeMember, HeroSlide, Member, PressArticle } from "@/lib/types";
+import type { CmsPost, CommitteeMember, HeroSlide, Member, PressArticle, PressRelease } from "@/lib/types";
 
 import {
   type AssociationInfo,
@@ -19,15 +20,15 @@ import {
 } from "./repository";
 
 /**
- * In-memory repository backed by the seed dataset.
- *
- * The methods are async and return copies so that swapping in Firestore later
- * needs no changes in the pages that consume them.
+ * In-memory repository backed by the official association dataset.
+ * Methods are async and return copies so a Firestore implementation can be
+ * swapped in without touching the pages that consume them.
  */
 export function createSeedRepository(): ContentRepository {
   const members = [...seedMembers];
   const posts = [...seedPosts];
   const press = [...seedPress];
+  const releases = [...seedPressReleases];
 
   const approvedMembers = () => members.filter((member) => member.membershipStatus === "approved");
 
@@ -73,6 +74,11 @@ export function createSeedRepository(): ContentRepository {
       return limit ? sorted.slice(0, limit) : sorted;
     },
 
+    async listPressReleases(limit?: number) {
+      const sorted = sortByDateDesc(releases as PressRelease[]);
+      return limit ? sorted.slice(0, limit) : sorted;
+    },
+
     async listCommittee() {
       const committee: CommitteeMember[] = [...seedCommittee];
       return committee.sort((a, b) => a.order - b.order);
@@ -88,5 +94,4 @@ export function createSeedRepository(): ContentRepository {
   };
 }
 
-/** Convenience helpers used by pages that only need one member shape. */
 export type { Member };

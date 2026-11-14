@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 
-import { FacebookIcon, InstagramIcon, LinkedinIcon, YoutubeIcon } from "@/components/brand-icons";
+import { FacebookIcon } from "@/components/brand-icons";
 import type { AssociationInfo } from "@/lib/data/repository";
-import { useI18n } from "@/lib/i18n/provider";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { useI18n } from "@/lib/i18n/provider";
 
 import { Logo } from "./logo";
 
@@ -18,7 +18,7 @@ const EXPLORE: Array<{ href: string; key: TranslationKey }> = [
 ];
 
 const RESOURCES: Array<{ href: string; key: TranslationKey }> = [
-  { href: "/about", key: "about.ethics.title" },
+  { href: "/about", key: "footer.ethics" },
   { href: "/about", key: "footer.constitution" },
   { href: "/login", key: "footer.membership" },
   { href: "/members", key: "footer.recruiters" },
@@ -28,32 +28,25 @@ export function SiteFooter({ association }: { association: AssociationInfo }) {
   const { t, lang, tx } = useI18n();
   const year = new Date().getFullYear();
 
-  const socials = [
-    { href: association.socials.facebook, label: "Facebook", Icon: FacebookIcon },
-    { href: association.socials.youtube, label: "YouTube", Icon: YoutubeIcon },
-    { href: association.socials.linkedin, label: "LinkedIn", Icon: LinkedinIcon },
-    { href: association.socials.instagram, label: "Instagram", Icon: InstagramIcon },
-  ].filter((item) => Boolean(item.href));
-
   return (
     <footer className="mt-20 border-t border-border bg-card/40 print-hidden">
       <div className="container grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-4">
-          <Logo />
+          <Logo asStatic />
           <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">{t("footer.about")}</p>
+          <p className="text-xs font-medium text-muted-foreground">
+            {lang === "bn" ? t("brand.orgBn") : "Gonomadhyam Video Editor Association"}
+          </p>
           <div className="flex items-center gap-2">
-            {socials.map(({ href, label, Icon }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={label}
-                className="grid h-9 w-9 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-              >
-                <Icon className="h-4 w-4" />
-              </a>
-            ))}
+            <a
+              href={association.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("footer.facebook")}
+              className="grid h-9 w-9 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+            >
+              <FacebookIcon className="h-4 w-4" />
+            </a>
           </div>
         </div>
 
@@ -62,10 +55,7 @@ export function SiteFooter({ association }: { association: AssociationInfo }) {
           <ul className="mt-4 space-y-2.5">
             {EXPLORE.map((item) => (
               <li key={`${item.href}-${item.key}`}>
-                <Link
-                  href={item.href}
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
+                <Link href={item.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                   {t(item.key)}
                 </Link>
               </li>
@@ -78,10 +68,7 @@ export function SiteFooter({ association }: { association: AssociationInfo }) {
           <ul className="mt-4 space-y-2.5">
             {RESOURCES.map((item) => (
               <li key={`${item.href}-${item.key}`}>
-                <Link
-                  href={item.href}
-                  className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
+                <Link href={item.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                   {t(item.key)}
                 </Link>
               </li>
@@ -96,18 +83,22 @@ export function SiteFooter({ association }: { association: AssociationInfo }) {
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
               <span>{tx(association.address)}</span>
             </li>
-            <li className="flex items-center gap-2.5">
-              <Mail className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-              <a href={`mailto:${association.email}`} className="link-underline">
-                {association.email}
-              </a>
-            </li>
-            <li className="flex items-center gap-2.5">
-              <Phone className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-              <a href={`tel:${association.phone.replace(/\s+/g, "")}`} dir="ltr" className="link-underline">
-                {association.phone}
-              </a>
-            </li>
+            {association.emails.map((email) => (
+              <li key={email} className="flex items-start gap-2.5">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <a href={`mailto:${email}`} className="link-underline break-all" dir="ltr">
+                  {email}
+                </a>
+              </li>
+            ))}
+            {association.phones.map((phone) => (
+              <li key={phone} className="flex items-center gap-2.5">
+                <Phone className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <a href={`tel:${phone.replace(/\s+/g, "")}`} dir="ltr" className="link-underline">
+                  {phone}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

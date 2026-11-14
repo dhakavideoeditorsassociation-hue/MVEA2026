@@ -1,8 +1,8 @@
 {
-  "name": "gonomadhyam-video-editor-association",
+  "name": "media-video-editors-association",
   "version": "0.1.0",
   "private": true,
-  "description": "Gonomadhyam Video Editor Association - public platform, member portal and admin dashboard.",
+  "description": "Media Video Editors Association (MVEA) - public platform, member portal and admin dashboard.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +14,6 @@
     "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "firebase": "^13.3.0",
     "framer-motion": "^14.14.0",
     "lucide-react": "^1.72.0",
     "next": "^14.2.35",

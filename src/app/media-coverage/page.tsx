@@ -6,11 +6,11 @@ import { repo } from "@/lib/data";
 export const metadata: Metadata = {
   title: "Media Coverage",
   description:
-    "National dailies and broadcast outlets reporting on the Gonomadhyam Video Editor Association, its members, workshops and advocacy.",
+    "National dailies reporting on the Media Video Editors Association — its launch, convener committee and events — plus official statements from the association's Facebook page.",
   alternates: { canonical: "/media-coverage" },
 };
 
 export default async function MediaCoveragePage() {
-  const articles = await repo.listPressArticles();
-  return <CoverageView articles={articles} />;
+  const [articles, releases] = await Promise.all([repo.listPressArticles(), repo.listPressReleases()]);
+  return <CoverageView articles={articles} releases={releases} />;
 }

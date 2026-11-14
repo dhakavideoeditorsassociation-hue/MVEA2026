@@ -59,6 +59,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Official statements published on the association Facebook page.
+    match /press_releases/{releaseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /hero_slides/{slideId} {
       allow read: if true;
       allow write: if isAdmin();

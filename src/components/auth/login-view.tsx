@@ -8,6 +8,7 @@ import { ArrowRight, Eye, EyeOff, Loader2, LogIn, ShieldCheck } from "lucide-rea
 import { AuthError, useAuth, type AuthErrorCode } from "@/lib/auth/auth-provider";
 import { useI18n } from "@/lib/i18n/provider";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
+import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/form-controls";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ export function LoginView() {
     <div className="container py-12 lg:py-16">
       <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-lg border border-border bg-card p-6 shadow-card sm:p-8">
+          <Logo asStatic className="mb-5" size={48} />
           <p className="eyebrow">{t("auth.eyebrow")}</p>
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{t("auth.login.title")}</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t("auth.login.subtitle")}</p>
@@ -157,8 +159,8 @@ export function LoginView() {
 
             <div className="mt-4 space-y-2">
               {[
-                { role: t("auth.demo.admin"), email: "admin@gvea.org", password: "Gvea@2026" },
-                { role: t("auth.demo.member"), email: "editor@gvea.org", password: "Gvea@2026" },
+                { role: t("auth.demo.admin"), email: "admin@mvea.org", password: "Mvea@2026" },
+                { role: t("auth.demo.member"), email: "editor@mvea.org", password: "Mvea@2026" },
               ].map((account) => (
                 <button
                   key={account.email}

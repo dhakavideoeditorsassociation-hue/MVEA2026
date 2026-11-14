@@ -8,20 +8,22 @@ import type {
   MembershipStatus,
   PostCategory,
   PressArticle,
+  PressRelease,
   SocialLinks,
 } from "@/lib/types";
 
 export type AssociationInfo = {
   foundedYear: number;
-  email: string;
-  phone: string;
+  emails: string[];
+  phones: string[];
   address: LocalizedText;
+  facebook: string;
   socials: SocialLinks;
 };
 
 export type MemberQuery = {
   status?: MembershipStatus;
-  /** When true, results are ordered by the committee rank (nulls last). */
+  /** When true, results are ordered by the committee order (nulls last). */
   ranked?: boolean;
 };
 
@@ -34,9 +36,9 @@ export type PostQuery = {
 /**
  * The contract every content backend must satisfy.
  *
- * Phase 1 ships a seed-backed implementation (`seed-repository.ts`). Phase 2
- * adds a Firestore implementation with the same surface, so pages never need
- * to know which backend is active.
+ * Phase 1 ships a seed-backed implementation (`seed-repository.ts`). A
+ * Firestore implementation can be dropped in with the same surface, so pages
+ * never need to know which backend is active.
  */
 export interface ContentRepository {
   listMembers(query?: MemberQuery): Promise<Member[]>;
@@ -47,12 +49,13 @@ export interface ContentRepository {
   listPosts(query?: PostQuery): Promise<CmsPost[]>;
   getPostBySlug(slug: string): Promise<CmsPost | null>;
   listPressArticles(limit?: number): Promise<PressArticle[]>;
+  listPressReleases(limit?: number): Promise<PressRelease[]>;
   listCommittee(): Promise<CommitteeMember[]>;
   listStats(): Promise<AssociationStat[]>;
   getAssociation(): Promise<AssociationInfo>;
 }
 
-/** Ranked members first, then unranked members alphabetically. */
+/** Committee order first, then unordered members alphabetically. */
 export function sortByRank(members: Member[]): Member[] {
   return [...members].sort((a, b) => {
     const rankA = a.rankOrder ?? Number.MAX_SAFE_INTEGER;

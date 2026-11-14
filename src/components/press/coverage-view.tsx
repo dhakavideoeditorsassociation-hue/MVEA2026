@@ -4,10 +4,17 @@ import { Newspaper } from "lucide-react";
 
 import { PageHero } from "@/components/common/page-hero";
 import { PressCard } from "@/components/press/press-card";
+import { PressReleaseCard } from "@/components/press/press-release-card";
 import { useI18n } from "@/lib/i18n/provider";
-import type { PressArticle } from "@/lib/types";
+import type { PressArticle, PressRelease } from "@/lib/types";
 
-export function CoverageView({ articles }: { articles: PressArticle[] }) {
+export function CoverageView({
+  articles,
+  releases,
+}: {
+  articles: PressArticle[];
+  releases: PressRelease[];
+}) {
   const { t } = useI18n();
 
   return (
@@ -30,6 +37,30 @@ export function CoverageView({ articles }: { articles: PressArticle[] }) {
             ))}
           </div>
         )}
+      </section>
+
+      <section id="press-releases" className="border-t border-border bg-muted/25">
+        <div className="container py-12 lg:py-16">
+          <p className="eyebrow">
+            <span className="h-px w-6 bg-primary" aria-hidden />
+            {t("releases.eyebrow")}
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{t("releases.title")}</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">{t("releases.subtitle")}</p>
+
+          {releases.length === 0 ? (
+            <div className="mt-8 rounded-lg border border-dashed border-border bg-card/50 px-6 py-12 text-center">
+              <h3 className="text-base font-semibold text-foreground">{t("releases.empty.title")}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{t("releases.empty.body")}</p>
+            </div>
+          ) : (
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {releases.map((release) => (
+                <PressReleaseCard key={release.id} release={release} />
+              ))}
+            </div>
+          )}
+        </div>
       </section>
     </>
   );

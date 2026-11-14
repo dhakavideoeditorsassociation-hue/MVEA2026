@@ -1,9 +1,9 @@
 /**
- * Shared domain types for the Gonomadhyam Video Editor Association platform.
+ * Shared domain types for the Media Video Editors Association (MVEA) platform.
  *
- * All content that is shown to visitors carries Bangla and English variants.
- * Records are intentionally plain serialisable objects so the same shapes can
- * be served by the seed repository today and Cloud Firestore in phase 2.
+ * All visitor-facing content carries Bangla and English variants. Records are
+ * plain serialisable objects so the same shapes can be served by the seed
+ * repository today and Cloud Firestore once the project is connected.
  */
 
 export type Lang = "bn" | "en";
@@ -16,12 +16,8 @@ export type LocalizedText = {
 
 export type MembershipStatus = "draft" | "pending" | "approved" | "rejected";
 
-export type PostCategory =
-  | "market-update"
-  | "software-tools"
-  | "workshop"
-  | "journalism-ethics"
-  | "storytelling";
+/** Editorial categories used by the articles & features section. */
+export type PostCategory = "feature" | "interview" | "guide" | "workshop" | "ethics";
 
 export type WorkHistoryItem = {
   id: string;
@@ -48,10 +44,12 @@ export type Member = {
   membershipId: string | null;
   fullNameBn: string;
   fullNameEn: string;
+  /** Empty string means "no photograph on file" — the UI renders initials. */
   photoUrl: string;
   mediaHouse: string;
   mediaHouseBn?: string;
   designation: LocalizedText;
+  /** 0 means "not published yet" rather than "no experience". */
   yearsExperience: number;
   workHistory: WorkHistoryItem[];
   skills: LocalizedText[];
@@ -106,10 +104,23 @@ export type PressArticle = {
   featured: boolean;
 };
 
+/** An official statement published on the association's Facebook page. */
+export type PressRelease = {
+  id: string;
+  title: LocalizedText;
+  excerpt: LocalizedText;
+  url: string;
+  imageUrl: string;
+  publishedAt: string;
+};
+
+export type CommitteeRole = "convener" | "joint-convener" | "member-secretary" | "member";
+
 export type CommitteeMember = {
   id: string;
   name: LocalizedText;
   role: LocalizedText;
+  roleType: CommitteeRole;
   mediaHouse: string;
   photoUrl: string;
   order: number;
