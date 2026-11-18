@@ -260,7 +260,9 @@ export type SiteSettings = {
   policies: Record<SitePolicyKey, LocalizedText>;
   announcement: SiteAnnouncement;
   contact: SiteContact;
+  /** Admin-managed hero slides; empty means "use the seeded slides". */
+  heroSlides: HeroSlide[];
   /** IDs hidden from the public site (seeded records included). */
-  deletedIds: { press: string[]; releases: string[] };
+  deletedIds: { press: string[]; releases: string[]; articles: string[] };
   updatedAt?: string;
 };

@@ -15,6 +15,7 @@ import {
 
 import { Avatar } from "@/components/common/avatar";
 import { useSiteSettings } from "@/lib/cms/site-settings";
+import { mergeEditorial, useLiveEditorial } from "@/lib/live/editorial";
 import { SectionHeading } from "@/components/common/section-heading";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { MemberCard } from "@/components/members/member-card";
@@ -57,11 +58,19 @@ type HomeViewProps = {
 export function HomeView({ slides, featured, press, pressMore, releases, posts, committee }: HomeViewProps) {
   const { t, tx, lang } = useI18n();
   const { settings } = useSiteSettings();
-  const hiddenPress = settings.deletedIds?.press ?? [];
-  const hiddenReleases = settings.deletedIds?.releases ?? [];
-  const visiblePress = press.filter((article) => !hiddenPress.includes(article.id));
-  const visiblePressMore = pressMore.filter((article) => !hiddenPress.includes(article.id));
-  const visibleReleases = releases.filter((release) => !hiddenReleases.includes(release.id));
+  const live = useLiveEditorial();
+
+  const allPress = mergeEditorial(press.concat(pressMore), live.coverage, {
+    deleted: settings.deletedIds?.press,
+    urlOf: (article) => article.url,
+  });
+  const allReleases = mergeEditorial(releases, live.releases, { deleted: settings.deletedIds?.releases });
+  const allPosts = mergeEditorial(posts, live.articles, { deleted: settings.deletedIds?.articles });
+
+  const visiblePress = allPress.slice(0, 3);
+  const visiblePressMore = allPress.slice(3, 8);
+  const visibleReleases = allReleases.slice(0, 3);
+  const visiblePosts = allPosts.slice(0, 3);
   const ICONS = PILLARS.map((pillar) => pillar.Icon);
 
   return (
@@ -168,7 +177,7 @@ export function HomeView({ slides, featured, press, pressMore, releases, posts, 
           action={{ href: "/articles", label: t("home.programs.cta") }}
         />
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post) => (
+          {visiblePosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>

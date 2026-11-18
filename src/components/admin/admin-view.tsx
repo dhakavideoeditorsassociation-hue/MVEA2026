@@ -24,6 +24,7 @@ import {
 import { FacebookIcon } from "@/components/brand-icons";
 import { Avatar } from "@/components/common/avatar";
 import { Markdown } from "@/components/common/markdown";
+import { HeroSlidesPanel } from "@/components/admin/hero-slides-panel";
 import { MemberCreatePanel } from "@/components/admin/member-create-panel";
 import { SiteContentPanel } from "@/components/admin/site-content-panel";
 import { Badge } from "@/components/ui/badge";
@@ -48,12 +49,10 @@ import {
   listPressReleases,
   listInquiries,
   nextMembershipId,
-  readHeroOverrides,
   readPostOverrides,
   readPressOverrides,
   readRankOverrides,
   reviewApplication,
-  setHeroVisibility as persistHeroVisibility,
   setMemberRank,
 } from "@/lib/store/admin-store";
 import type {
@@ -92,7 +91,7 @@ type AdminViewProps = {
 };
 
 export function AdminView({ members, heroSlides, posts, pressArticles }: AdminViewProps) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { user, ready, logout, mode } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("overview");
@@ -104,7 +103,6 @@ export function AdminView({ members, heroSlides, posts, pressArticles }: AdminVi
   const [releaseOverrides, setReleaseOverrides] = useState<PressRelease[]>([]);
   const [postOverrides, setPostOverrides] = useState<CmsPost[]>([]);
   const [rankOverrides, setRankOverrides] = useState<Record<string, number>>({});
-  const [heroVisibility, setHeroVisibility] = useState<Record<string, boolean>>({});
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -118,7 +116,6 @@ export function AdminView({ members, heroSlides, posts, pressArticles }: AdminVi
       setPressOverrides(readPressOverrides());
       setPostOverrides(readPostOverrides());
       setRankOverrides(readRankOverrides());
-      setHeroVisibility(readHeroOverrides().visibility);
       setLoaded(true);
     });
     return () => {
@@ -289,17 +286,7 @@ export function AdminView({ members, heroSlides, posts, pressArticles }: AdminVi
           {tab === "content" ? <SiteContentPanel /> : null}
           {tab === "add-member" ? <MemberCreatePanel members={members} /> : null}
 
-          {tab === "hero" ? (
-            <HeroPanel
-              slides={heroSlides}
-              visibility={heroVisibility}
-              onToggle={async (id, visible) => {
-                await persistHeroVisibility(id, visible);
-                setHeroVisibility((current) => ({ ...current, [id]: visible }));
-              }}
-              lang={lang}
-            />
-          ) : null}
+          {tab === "hero" ? <HeroSlidesPanel seededSlides={heroSlides} /> : null}
 
           {tab === "posts" ? (
             <PostsPanel posts={allPosts} onPublished={(post) => setPostOverrides((current) => [post, ...current])} />
@@ -590,6 +577,7 @@ function PressPanel({
   const [error, setError] = useState(false);
   const [published, setPublished] = useState(false);
   const [customImage, setCustomImage] = useState("");
+  const [manual, setManual] = useState({ title: "", source: "", publishedAt: "", imageUrl: "" });
   const [uploadingThumb, setUploadingThumb] = useState(false);
 
   async function fetchPreview() {
@@ -605,6 +593,12 @@ function PressPanel({
       const payload = (await response.json()) as { ok: boolean; data?: OgPreview; error?: string };
       if (!payload.ok || !payload.data) throw new Error(payload.error ?? "failed");
       setPreview(payload.data);
+      setManual({
+        title: payload.data.title ?? "",
+        source: payload.data.siteName ?? "",
+        publishedAt: (payload.data.publishedAt ?? new Date().toISOString()).slice(0, 10),
+        imageUrl: payload.data.image ?? "",
+      });
     } catch {
       setPreview(null);
       setError(true);
@@ -614,15 +608,16 @@ function PressPanel({
   }
 
   async function publish() {
-    if (!preview) return;
+    const headline = (manual.title || preview?.title || "").trim();
+    if (!headline || !url.trim()) return;
     const article: PressArticle = {
       id: `press-${Date.now()}`,
-      title: { bn: preview.title, en: preview.title },
-      excerpt: { bn: preview.description, en: preview.description },
-      source: preview.siteName,
-      url: preview.url,
-      imageUrl: customImage || preview.image || "",
-      publishedAt: preview.publishedAt ?? new Date().toISOString(),
+      title: { bn: headline, en: headline },
+      excerpt: { bn: preview?.description || headline, en: preview?.description || headline },
+      source: (manual.source || preview?.siteName || "Press").trim(),
+      url: url.trim(),
+      imageUrl: customImage || manual.imageUrl || preview?.image || "",
+      publishedAt: manual.publishedAt ? new Date(manual.publishedAt).toISOString() : preview?.publishedAt ?? new Date().toISOString(),
       featured: false,
     };
     await addPressArticle(article);
@@ -631,8 +626,8 @@ function PressPanel({
     setPreview(null);
     setUrl("");
     setCustomImage("");
+    setManual({ title: "", source: "", publishedAt: "", imageUrl: "" });
   }
-
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-border bg-card p-5 shadow-card">
@@ -653,6 +648,76 @@ function PressPanel({
           </Button>
         </div>
 
+        <div className="mt-4 rounded-md border border-border/70 p-3">
+          <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            {t("admin.press.manual")}
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Label htmlFor="press-manual-title">{t("admin.press.headline")}</Label>
+              <Input
+                id="press-manual-title"
+                value={manual.title}
+                onChange={(event) => setManual((current) => ({ ...current, title: event.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="press-manual-outlet">{t("admin.press.publisher")}</Label>
+              <Input
+                id="press-manual-outlet"
+                value={manual.source}
+                onChange={(event) => setManual((current) => ({ ...current, source: event.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="press-manual-date">{t("admin.releases.publishedOn")}</Label>
+              <Input
+                id="press-manual-date"
+                type="date"
+                value={manual.publishedAt}
+                onChange={(event) => setManual((current) => ({ ...current, publishedAt: event.target.value }))}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="press-manual-image">{t("admin.press.image")}</Label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  id="press-manual-image"
+                  value={manual.imageUrl}
+                  onChange={(event) => setManual((current) => ({ ...current, imageUrl: event.target.value }))}
+                  placeholder="https://res.cloudinary.com/..."
+                  dir="ltr"
+                />
+                <label className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-border px-3 text-xs font-semibold transition-colors hover:border-primary/50">
+                  {uploadingThumb ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <ImagePlus className="h-3.5 w-3.5" aria-hidden />}
+                  {t("admin.thumb.upload")}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      setUploadingThumb(true);
+                      const targetUrl = url.trim();
+                      void uploadFile(file, "image")
+                        .then((uploaded) => setManual((current) => ({ ...current, imageUrl: uploaded })))
+                        .finally(() => setUploadingThumb(false));
+                      void targetUrl;
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button size="sm" onClick={() => void publish()} disabled={!manual.title.trim() || !url.trim()} className="gap-1.5">
+              <Check className="h-3.5 w-3.5" aria-hidden />
+              {t("admin.press.publish")}
+            </Button>
+            {published ? <span className="text-xs font-semibold text-primary">{t("admin.press.published")}</span> : null}
+          </div>
+        </div>
         {error ? (
           <p role="alert" className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {t("admin.press.error")}
@@ -802,58 +867,12 @@ function InquiriesPanel({ inquiries }: { inquiries: RecruiterInquiry[] }) {
   );
 }
 
-function HeroPanel({
-  slides,
-  visibility,
-  onToggle,
-  lang,
-}: {
-  slides: HeroSlide[];
-  visibility: Record<string, boolean>;
-  onToggle: (id: string, visible: boolean) => Promise<void>;
-  lang: "bn" | "en";
-}) {
-  const { t, tx } = useI18n();
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t("admin.hero.title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("admin.hero.subtitle")}</p>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {slides.map((slide) => {
-          const visible = visibility[slide.id] ?? slide.visible;
-          return (
-            <article key={slide.id} className="overflow-hidden rounded-lg border border-border bg-card shadow-card">
-              <div className="relative aspect-[16/9] bg-muted">
-                <Image src={slide.imageUrl} alt="" fill sizes="400px" className="object-cover" />
-              </div>
-              <div className="p-4">
-                <h3 className="text-sm font-semibold leading-snug text-foreground">{tx(slide.title)}</h3>
-                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{tx(slide.subtitle)}</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <Badge variant={visible ? "default" : "outline"}>
-                    {visible ? t("admin.hero.visible") : t("admin.hero.hidden")}
-                  </Badge>
-                  <Button size="sm" variant="outline" onClick={() => void onToggle(slide.id, !visible)}>
-                    {visible ? t("admin.hero.hidden") : t("admin.hero.visible")}
-                  </Button>
-                </div>
-                <p className="mt-2 text-[0.7rem] text-muted-foreground" lang={lang === "bn" ? "bn" : "en"}>
-                  #{slide.order}
-                </p>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function PostsPanel({ posts, onPublished }: { posts: CmsPost[]; onPublished: (post: CmsPost) => void }) {
+function PostsPanel({ posts, onPublished, onDeleted }: { posts: CmsPost[]; onPublished: (post: CmsPost) => void; onDeleted?: (id: string) => void }) {
   const { t, lang, tx } = useI18n();
+  const { settings, save } = useSiteSettings();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingSlug, setEditingSlug] = useState<string>("");
+  const [removed, setRemoved] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [published, setPublished] = useState(false);
   const [form, setForm] = useState({
@@ -870,14 +889,48 @@ function PostsPanel({ posts, onPublished }: { posts: CmsPost[]; onPublished: (po
   });
   const [preview, setPreview] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  function startEdit(post: CmsPost) {
+    setEditingId(post.id);
+    setEditingSlug(post.slug);
+    setForm({
+      category: post.category,
+      titleBn: post.title.bn,
+      titleEn: post.title.en,
+      subheadlineBn: post.subheadline?.bn ?? "",
+      subheadlineEn: post.subheadline?.en ?? "",
+      excerptBn: post.excerpt.bn,
+      excerptEn: post.excerpt.en,
+      bodyBn: post.body.map((paragraph) => paragraph.bn).join("\n\n"),
+      bodyEn: post.body.map((paragraph) => paragraph.en).join("\n\n"),
+      coverImageUrl: post.coverImageUrl,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  async function removePost(id: string) {
+    if (!window.confirm(t("admin.delete.confirm"))) return;
+    await save({ ...settings, deletedIds: { ...settings.deletedIds, articles: [...(settings.deletedIds?.articles ?? []), id] } });
+    try {
+      const { deleteDoc, doc } = await import("firebase/firestore");
+      const { getFirebaseDb, isFirebaseConfigured } = await import("@/lib/firebase");
+      if (isFirebaseConfigured) {
+        await deleteDoc(doc(getFirebaseDb(), "cms_posts", id));
+      }
+    } catch {
+      /* seeded item: hiding via deletedIds is enough */
+    }
+    setRemoved((current) => [...current, id]);
+    onDeleted?.(id);
+  }
 
   async function publish(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     try {
       const post: CmsPost = {
-        id: `post-${Date.now()}`,
-        slug: `${form.titleEn.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "resource"}-${Date.now()
+        id: editingId ?? `post-${Date.now()}`,
+        slug:
+          editingSlug ||
+          `${form.titleEn.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "resource"}-${Date.now()
           .toString()
           .slice(-4)}`,
         category: form.category,
@@ -1098,15 +1151,33 @@ function PostsPanel({ posts, onPublished }: { posts: CmsPost[]; onPublished: (po
       <section>
         <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t("nav.programs")}</h2>
         <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
-          {posts.map((post) => (
-            <li key={post.id} className="px-4 py-3">
-              <p className="text-sm font-medium text-foreground">{tx(post.title)}</p>
-              <p className="text-xs text-muted-foreground">
-                {t(categoryKey(post.category))} · {formatShortDate(post.publishedAt, lang)}
-              </p>
-            </li>
-          ))}
-        </ul>
+          {posts
+            .filter((post) => !removed.includes(post.id))
+            .map((post) => (
+              <li key={post.id} className="px-4 py-3">
+                <p className="text-sm font-medium text-foreground">{tx(post.title)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t(categoryKey(post.category))} - {formatShortDate(post.publishedAt, lang)}
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => startEdit(post)}
+                    className="rounded-md border border-border px-2 py-1 text-[0.7rem] font-semibold text-foreground transition-colors hover:border-primary/50"
+                  >
+                    {editingId === post.id ? "Editing" : "Edit"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void removePost(post.id)}
+                    className="inline-flex items-center gap-1 rounded-md border border-destructive/40 px-2 py-1 text-[0.7rem] font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-3 w-3" aria-hidden />
+                    {t("admin.delete")}
+                  </button>
+                </div>
+              </li>
+            ))}        </ul>
       </section>
     </div>
   );
@@ -1159,6 +1230,25 @@ function PressReleasePanel({
   const { settings, save } = useSiteSettings();
   const [url, setUrl] = useState("");
   const [removed, setRemoved] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingSlug, setEditingSlug] = useState("");
+  function startEdit(release: PressRelease) {
+    setEditingId(release.id);
+    setEditingSlug(release.slug);
+    setUrl(release.url);
+    setForm({
+      titleBn: release.title.bn,
+      titleEn: release.title.en,
+      subheadlineBn: release.subheadline?.bn ?? "",
+      subheadlineEn: release.subheadline?.en ?? "",
+      excerptBn: release.excerpt.bn,
+      excerptEn: release.excerpt.en,
+      bodyBn: release.body.map((paragraph) => paragraph.bn).join(String.fromCharCode(10, 10)),
+      bodyEn: release.body.map((paragraph) => paragraph.en).join(String.fromCharCode(10, 10)),
+      refNo: release.refNo ?? "",
+      imageUrl: release.imageUrl,
+    });
+  }
 
   async function removeRelease(id: string) {
     if (!window.confirm(t("admin.delete.confirm"))) return;
@@ -1233,8 +1323,8 @@ function PressReleasePanel({
   async function publish(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const release: PressRelease = {
-      id: `release-${Date.now()}`,
-      slug: (form.titleEn || form.titleBn).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `statement-${Date.now()}`,
+      id: editingId ?? `release-${Date.now()}`,
+      slug: editingSlug || (form.titleEn || form.titleBn).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `statement-${Date.now()}`,
       title: { bn: form.titleBn || form.titleEn, en: form.titleEn || form.titleBn },
       subheadline: { bn: form.subheadlineBn || form.subheadlineEn, en: form.subheadlineEn || form.subheadlineBn },
       excerpt: { bn: form.excerptBn || form.excerptEn, en: form.excerptEn || form.excerptBn },
@@ -1348,7 +1438,7 @@ function PressReleasePanel({
                 <Textarea id="release-body-en" rows={6} value={form.bodyEn} onChange={(event) => setForm((current) => ({ ...current, bodyEn: event.target.value }))} />
               </div>
             </div>
-`r`n            <div>
+            <div>
               <Label htmlFor="release-image">{t("admin.releases.image")}</Label>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
@@ -1425,6 +1515,13 @@ function PressReleasePanel({
                     {t("releases.open")}
                     <ExternalLink className="h-3 w-3" aria-hidden />
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => startEdit(release)}
+                    className="rounded-md border border-border px-2 py-1 text-[0.7rem] font-semibold text-foreground transition-colors hover:border-primary/50"
+                  >
+                    {editingId === release.id ? "Editing" : "Edit"}
+                  </button>
                   <button
                     type="button"
                     onClick={() => void removeRelease(release.id)}

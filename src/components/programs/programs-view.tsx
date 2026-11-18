@@ -6,6 +6,8 @@ import { FolderOpen } from "lucide-react";
 import { PageHero } from "@/components/common/page-hero";
 import { PostCard } from "@/components/programs/post-card";
 import { categoryKey, POST_CATEGORIES } from "@/lib/categories";
+import { useSiteSettings } from "@/lib/cms/site-settings";
+import { mergeEditorial, useLiveEditorial } from "@/lib/live/editorial";
 import { useI18n } from "@/lib/i18n/provider";
 import type { CmsPost, PostCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -19,6 +21,10 @@ type ProgramsViewProps = {
 
 export function ProgramsView({ posts, activeCategory, counts, basePath = "/articles" }: ProgramsViewProps) {
   const { t } = useI18n();
+  const { settings } = useSiteSettings();
+  const live = useLiveEditorial();
+  const merged = mergeEditorial(posts, live.articles, { deleted: settings.deletedIds?.articles });
+  const visiblePosts = activeCategory ? merged.filter((post) => post.category === activeCategory) : merged;
 
   const tabs: Array<{ key: string; href: string; label: string; count: number }> = [
     { key: "all", href: basePath, label: t("programs.filter.all"), count: counts.all ?? 0 },
@@ -59,7 +65,7 @@ export function ProgramsView({ posts, activeCategory, counts, basePath = "/artic
       </PageHero>
 
       <section className="container py-10 lg:py-14">
-        {posts.length === 0 ? (
+        {visiblePosts.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-card/50 px-6 py-16 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-muted text-muted-foreground">
               <FolderOpen className="h-5 w-5" aria-hidden />
@@ -72,7 +78,7 @@ export function ProgramsView({ posts, activeCategory, counts, basePath = "/artic
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post, index) => (
+            {visiblePosts.map((post, index) => (
               <PostCard key={post.id} post={post} className={index === 0 && !activeCategory ? "sm:col-span-2 lg:col-span-2" : undefined} />
             ))}
           </div>

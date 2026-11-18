@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { FACEBOOK_PAGE } from "@/lib/brand";
 import { formatShortDate } from "@/lib/format";
 import { useSiteSettings } from "@/lib/cms/site-settings";
+import { mergeEditorial, useLiveEditorial } from "@/lib/live/editorial";
 import { useI18n } from "@/lib/i18n/provider";
 import type { PressRelease } from "@/lib/types";
 
@@ -24,8 +25,8 @@ import type { PressRelease } from "@/lib/types";
 export function PressReleasesView({ releases }: { releases: PressRelease[] }) {
   const { t, lang, tx } = useI18n();
   const { settings } = useSiteSettings();
-  const hidden = settings.deletedIds?.releases ?? [];
-  const visibleReleases = releases.filter((release) => !hidden.includes(release.id));
+  const live = useLiveEditorial();
+  const visibleReleases = mergeEditorial(releases, live.releases, { deleted: settings.deletedIds?.releases });
 
   return (
     <>
