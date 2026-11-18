@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, ExternalLink, Newspaper } from "lucide-react
 import { PageHero } from "@/components/common/page-hero";
 import { PressCard } from "@/components/press/press-card";
 import { buttonVariants } from "@/components/ui/button";
+import { useSiteSettings } from "@/lib/cms/site-settings";
 import { useI18n } from "@/lib/i18n/provider";
 import type { PressArticle } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,9 @@ function pageHref(page: number, outlet?: string) {
  */
 export function CoverageArchiveView({ articles, outlets, activeOutlet, page, totalPages }: CoverageArchiveViewProps) {
   const { t } = useI18n();
+  const { settings } = useSiteSettings();
+  const hidden = settings.deletedIds?.press ?? [];
+  const visible = articles.filter((article) => !hidden.includes(article.id));
 
   return (
     <>
@@ -65,7 +69,7 @@ export function CoverageArchiveView({ articles, outlets, activeOutlet, page, tot
       </PageHero>
 
       <section className="container py-10 lg:py-14">
-        {articles.length === 0 ? (
+        {visible.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-card/50 px-6 py-16 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-muted text-muted-foreground">
               <Newspaper className="h-5 w-5" aria-hidden />
@@ -75,7 +79,7 @@ export function CoverageArchiveView({ articles, outlets, activeOutlet, page, tot
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {articles.map((article) => (
+            {visible.map((article) => (
               <PressCard key={article.id} article={article} />
             ))}
           </div>

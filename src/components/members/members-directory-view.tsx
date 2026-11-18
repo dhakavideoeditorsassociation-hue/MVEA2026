@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
 import { HireRequestButton } from "@/components/hire/hire-request-button";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form-controls";
 import { Input } from "@/components/ui/input";
 import { formatNumber } from "@/lib/format";
+import { fetchRemoteMembers } from "@/lib/store/public-members";
 import { useI18n } from "@/lib/i18n/provider";
 import type { Member } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -25,28 +26,46 @@ const BUCKETS: Record<Exclude<ExperienceBucket, "all">, [number, number]> = {
 
 export function MembersDirectoryView({ members }: { members: Member[] }) {
   const { t, lang } = useI18n();
+  const [remoteMembers, setRemoteMembers] = useState<Member[]>([]);
   const [query, setQuery] = useState("");
   const [mediaHouse, setMediaHouse] = useState("all");
   const [skill, setSkill] = useState("all");
   const [bucket, setBucket] = useState<ExperienceBucket>("all");
 
+  useEffect(() => {
+    let cancelled = false;
+    void fetchRemoteMembers()
+      .then((extra) => {
+        if (!cancelled) setRemoteMembers(extra);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const allMembers = useMemo(() => {
+    const seen = new Set(members.map((member) => member.slug));
+    return [...members, ...remoteMembers.filter((member) => !seen.has(member.slug))];
+  }, [members, remoteMembers]);
+
   const mediaHouses = useMemo(
-    () => Array.from(new Set(members.map((member) => member.mediaHouse))).sort(),
-    [members],
+    () => Array.from(new Set(allMembers.map((member) => member.mediaHouse))).sort(),
+    [allMembers],
   );
 
   const skillOptions = useMemo(() => {
     const values = new Set<string>();
-    members.forEach((member) => {
+    allMembers.forEach((member) => {
       member.skills.forEach((item) => values.add(item.en));
       member.tools.forEach((tool) => values.add(tool));
     });
     return Array.from(values).sort();
-  }, [members]);
+  }, [allMembers]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return members.filter((member) => {
+    return allMembers.filter((member) => {
       if (mediaHouse !== "all" && member.mediaHouse !== mediaHouse) return false;
       if (skill !== "all") {
         const hasSkill = member.skills.some((item) => item.en === skill) || member.tools.includes(skill);
@@ -69,7 +88,7 @@ export function MembersDirectoryView({ members }: { members: Member[] }) {
         .toLowerCase()
         .includes(needle);
     });
-  }, [members, query, mediaHouse, skill, bucket]);
+  }, [allMembers, query, mediaHouse, skill, bucket]);
 
   const hasFilters = query !== "" || mediaHouse !== "all" || skill !== "all" || bucket !== "all";
 

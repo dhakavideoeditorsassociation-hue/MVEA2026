@@ -215,9 +215,45 @@ export async function fetchLinkPreview(rawUrl: string): Promise<LinkPreviewResul
       $("title").first().text().trim();
     const description =
       readMeta($, "og:description") || readMeta($, "twitter:description") || readMeta($, "description");
+    // Some Bangla news sites only expose the lead image via JSON-LD, so check
+    // schema.org data after the OpenGraph/Twitter meta tags.
+    const jsonLdImage = (() => {
+      const scripts = $('script[type="application/ld+json"]');
+      for (let index = 0; index < scripts.length; index += 1) {
+        try {
+          const raw = $(scripts[index]).contents().text();
+          if (!raw) continue;
+          const parsed: unknown = JSON.parse(raw);
+          const stack: unknown[] = Array.isArray(parsed) ? [...parsed] : [parsed];
+          while (stack.length > 0) {
+            const node = stack.shift();
+            if (!node || typeof node !== "object") continue;
+            const record = node as Record<string, unknown>;
+            const image = record.image;
+            if (typeof image === "string" && image) return image;
+            if (image && typeof image === "object") {
+              const imageRecord = image as Record<string, unknown>;
+              if (typeof imageRecord.url === "string" && imageRecord.url) return imageRecord.url;
+              if (Array.isArray(image) && typeof image[0] === "string") return image[0] as string;
+            }
+            if (Array.isArray(record["@graph"])) stack.push(...(record["@graph"] as unknown[]));
+          }
+        } catch {
+          /* malformed JSON-LD is common; ignore */
+        }
+      }
+      return "";
+    })();
     const image =
-      absolutise(readMeta($, "og:image") || readMeta($, "twitter:image"), finalUrl) ??
-      absolutise($('link[rel="image_src"]').attr("href") ?? "", finalUrl);
+      absolutise(
+        readMeta($, "og:image") ||
+          readMeta($, "twitter:image") ||
+          readMeta($, "image") ||
+          jsonLdImage ||
+          $('link[rel="image_src"]').attr("href") ||
+          "",
+        finalUrl,
+      );
     const publishedAt =
       readMeta($, "article:published_time") || readMeta($, "og:updated_time") || $("time[datetime]").first().attr("datetime") || null;
 

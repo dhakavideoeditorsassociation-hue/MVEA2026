@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { ArrowUpRight, CalendarDays, Newspaper } from "lucide-react";
 
+import { CoverageThumb } from "@/components/press/coverage-thumb";
 import { formatShortDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/provider";
 import { prettyHost } from "@/lib/media";
@@ -23,13 +23,7 @@ export function PressCard({ article, className }: { article: PressArticle; class
       )}
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-        <Image
-          src={article.imageUrl.startsWith("http") ? `/api/image-proxy?url=${encodeURIComponent(article.imageUrl)}` : article.imageUrl}
-          alt={tx(article.title)}
-          fill
-          sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 90vw"
-          className="object-cover transition-transform duration-500 ease-smooth group-hover:scale-[1.04]"
-        />
+        <CoverageThumb src={article.imageUrl} alt={tx(article.title)} source={article.source} sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 90vw" />
         <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-background/92 px-2.5 py-1 text-[0.68rem] font-bold text-foreground shadow-sm backdrop-blur">
           <Newspaper className="h-3 w-3 text-primary" aria-hidden />
           {article.source}

@@ -119,6 +119,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     address: L("Dhaka, Bangladesh", "ঢাকা, বাংলাদেশ"),
     facebook: FACEBOOK_PAGE,
   },
+  deletedIds: { press: [], releases: [] },
 };
 
 type SiteSettingsContextValue = {
@@ -188,6 +189,10 @@ function withDefaults(stored: Partial<SiteSettings> | null): SiteSettings {
     policies: { ...DEFAULT_SETTINGS.policies, ...(stored.policies ?? {}) },
     announcement: { ...DEFAULT_SETTINGS.announcement, ...(stored.announcement ?? {}) },
     contact: { ...DEFAULT_SETTINGS.contact, ...(stored.contact ?? {}) },
+    deletedIds: {
+      press: Array.isArray(stored.deletedIds?.press) ? stored.deletedIds.press : [],
+      releases: Array.isArray(stored.deletedIds?.releases) ? stored.deletedIds.releases : [],
+    },
     updatedAt: stored.updatedAt,
   };
 }

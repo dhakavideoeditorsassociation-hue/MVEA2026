@@ -260,5 +260,7 @@ export type SiteSettings = {
   policies: Record<SitePolicyKey, LocalizedText>;
   announcement: SiteAnnouncement;
   contact: SiteContact;
+  /** IDs hidden from the public site (seeded records included). */
+  deletedIds: { press: string[]; releases: string[] };
   updatedAt?: string;
 };

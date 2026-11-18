@@ -57,6 +57,11 @@ type HomeViewProps = {
 export function HomeView({ slides, featured, press, pressMore, releases, posts, committee }: HomeViewProps) {
   const { t, tx, lang } = useI18n();
   const { settings } = useSiteSettings();
+  const hiddenPress = settings.deletedIds?.press ?? [];
+  const hiddenReleases = settings.deletedIds?.releases ?? [];
+  const visiblePress = press.filter((article) => !hiddenPress.includes(article.id));
+  const visiblePressMore = pressMore.filter((article) => !hiddenPress.includes(article.id));
+  const visibleReleases = releases.filter((release) => !hiddenReleases.includes(release.id));
   const ICONS = PILLARS.map((pillar) => pillar.Icon);
 
   return (
@@ -113,14 +118,14 @@ export function HomeView({ slides, featured, press, pressMore, releases, posts, 
         />
         <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {press.map((article) => (
+            {visiblePress.map((article) => (
               <PressCard key={article.id} article={article} />
             ))}
           </div>
           <aside className="rounded-lg border border-border bg-card p-4 shadow-card">
             <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t("home.press.eyebrow")}</h3>
             <ul className="mt-3 space-y-3">
-              {pressMore.map((article) => (
+              {visiblePressMore.map((article) => (
                 <li key={article.id} className="border-b border-border/60 pb-3 last:border-0 last:pb-0">
                   <a href={article.url} target="_blank" rel="noopener noreferrer" className="group block">
                     <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-primary">{article.source}</span>
@@ -137,7 +142,7 @@ export function HomeView({ slides, featured, press, pressMore, releases, posts, 
         </div>
       </section>
 
-      {releases.length > 0 ? (
+      {visibleReleases.length > 0 ? (
         <section id="press-releases" className="border-y border-border bg-muted/25">
           <div className="container py-16 lg:py-20">
             <SectionHeading
@@ -147,7 +152,7 @@ export function HomeView({ slides, featured, press, pressMore, releases, posts, 
               action={{ href: "/press-releases", label: t("home.releases.cta") }}
             />
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {releases.map((release) => (
+              {visibleReleases.map((release) => (
                 <PressReleaseCard key={release.id} release={release} />
               ))}
             </div>

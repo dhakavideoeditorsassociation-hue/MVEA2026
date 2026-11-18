@@ -6,6 +6,10 @@
  */
 export const extraEn = {
   "admin.tab.content": "Site Content",
+  "admin.delete": "Delete",
+  "admin.delete.confirm": "Remove this item from the public site? This can be undone only by restoring the record.",
+  "admin.thumb.override": "Custom thumbnail (optional)",
+  "admin.thumb.upload": "Upload thumbnail",
   "admin.tab.addMember": "Add Member",
   "admin.releases.subheadlineBn": "Sub-headline (Bangla)",
   "admin.releases.subheadlineEn": "Sub-headline (English)",
@@ -45,6 +49,10 @@ export const extraEn = {
   "members.add.bioEn": "Biography (English)",
   "members.add.photo": "Profile photo",
   "members.add.cv": "CV (PDF)",
+  "footer.verify": "Verify Member ID",
+  "verify.index.title": "Member ID verification",
+  "verify.index.subtitle": "Enter a membership ID to open the official verified card.",
+  "verify.index.placeholder": "MVEA-2026-001",
   "nav.pressReleases": "Press Release",
   "nav.articles": "Articles",
   "nav.aboutPolicy": "About & Policy",
@@ -141,6 +149,10 @@ export type ExtraKey = keyof typeof extraEn;
 
 export const extraBn: Record<ExtraKey, string> = {
   "admin.tab.content": "সাইট কনটেন্ট",
+  "admin.delete": "মুছুন",
+  "admin.delete.confirm": "এই আইটেমটি পাবলিক সাইট থেকে সরিয়ে দেবেন? রেকর্ড ফিরিয়ে আনা ছাড়া এটি ফেরানো যাবে না।",
+  "admin.thumb.override": "কাস্টম থাম্বনেইল (ঐচ্ছিক)",
+  "admin.thumb.upload": "থাম্বনেইল আপলোড",
   "admin.tab.addMember": "সদস্য যোগ করুন",
   "admin.releases.subheadlineBn": "উপ-শিরোনাম (বাংলা)",
   "admin.releases.subheadlineEn": "উপ-শিরোনাম (ইংরেজি)",
@@ -180,6 +192,10 @@ export const extraBn: Record<ExtraKey, string> = {
   "members.add.bioEn": "পরিচিতি (ইংরেজি)",
   "members.add.photo": "প্রোফাইল ছবি",
   "members.add.cv": "সিভি (PDF)",
+  "footer.verify": "সদস্য আইডি যাচাই",
+  "verify.index.title": "সদস্য আইডি যাচাই",
+  "verify.index.subtitle": "অফিসিয়াল যাচাইকৃত কার্ড দেখতে সদস্য আইডি লিখুন।",
+  "verify.index.placeholder": "MVEA-2026-001",
   "nav.pressReleases": "প্রেস রিলিজ",
   "nav.articles": "আর্টিকেল",
   "nav.aboutPolicy": "পরিচিতি ও নীতিমালা",

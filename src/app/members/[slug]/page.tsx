@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
+import { RemoteMemberProfile } from "@/components/members/remote-member";
 import { MemberProfileView } from "@/components/members/member-profile-view";
 import { repo } from "@/lib/data";
 
 type PageProps = { params: { slug: string } };
 
-// Detail pages are pre-rendered from the current dataset (see generateStaticParams).
-// Unknown slugs render the branded not-found page; Next caches that response, so
-// the HTTP status stays 200. Use middleware or ISR if a hard 404 is required.
-export const dynamicParams = false;
+/** Seeded members are pre-rendered; members added from /admin render on demand. */
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const members = await repo.listMembers({ status: "approved" });
@@ -18,12 +16,12 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const member = await repo.getMemberBySlug(params.slug);
-  // Resolving the record in generateMetadata lets Next answer with a real 404
-  // status before the response starts streaming.
-  if (!member || member.membershipStatus !== "approved") notFound();
+  if (!member) {
+    return { title: "Member profile", alternates: { canonical: `/members/${params.slug}` } };
+  }
 
   const title = `${member.fullNameEn} — ${member.designation.en}`;
-  const description = `${member.designation.en} at ${member.mediaHouse}, ${member.yearsExperience} years of experience. Verified member of the Gonomadhyam Video Editor Association.`;
+  const description = `${member.designation.en} at ${member.mediaHouse}. Verified member of the Media Video Editors Association.`;
 
   return {
     title,
@@ -33,14 +31,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       type: "profile",
-      images: [{ url: member.photoUrl, alt: member.fullNameEn }],
+      images: member.photoUrl ? [{ url: member.photoUrl }] : undefined,
     },
   };
 }
 
 export default async function MemberProfilePage({ params }: PageProps) {
   const member = await repo.getMemberBySlug(params.slug);
-  if (!member || member.membershipStatus !== "approved") notFound();
+  if (!member || member.membershipStatus !== "approved") {
+    return <RemoteMemberProfile slug={params.slug} />;
+  }
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -49,20 +49,16 @@ export default async function MemberProfilePage({ params }: PageProps) {
     alternateName: member.fullNameBn,
     jobTitle: member.designation.en,
     worksFor: { "@type": "Organization", name: member.mediaHouse },
-    image: member.photoUrl,
+    image: member.photoUrl || undefined,
     url: `/members/${member.slug}`,
     description: member.bio.en,
-    memberOf: {
-      "@type": "Organization",
-      name: "Gonomadhyam Video Editor Association",
-    },
+    memberOf: { "@type": "Organization", name: "Media Video Editors Association" },
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        // The payload is generated from local records only, never user input.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <MemberProfileView member={member} />

@@ -52,16 +52,24 @@ export async function GET(request: Request) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const response = await fetch(target, {
-      signal: controller.signal,
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-        Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-        Referer: `${target.origin}/`,
-      },
-      cache: "no-store",
-    });
+    const browserHeaders: Record<string, string> = {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+      "Accept-Language": "bn-BD,bn;q=0.9,en;q=0.8",
+      "Cache-Control": "no-cache",
+    };
+
+    const load = (withReferer: boolean) =>
+      fetch(target, {
+        signal: controller.signal,
+        headers: withReferer ? { ...browserHeaders, Referer: `${target.origin}/` } : browserHeaders,
+        cache: "no-store",
+      });
+
+    // Some CDNs reject a same-origin referer; retry once without it.
+    let response = await load(true);
+    if (!response.ok) response = await load(false);
 
     if (!response.ok) return NextResponse.json({ error: `upstream ${response.status}` }, { status: 502 });
 

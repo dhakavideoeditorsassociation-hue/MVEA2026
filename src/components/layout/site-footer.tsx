@@ -22,6 +22,7 @@ const RESOURCES: Array<{ href: string; key: TranslationKey }> = [
   { href: "/about", key: "footer.constitution" },
   { href: "/login", key: "footer.membership" },
   { href: "/resources", key: "nav.resources" },
+  { href: "/verify", key: "footer.verify" },
 ];
 
 export function SiteFooter() {

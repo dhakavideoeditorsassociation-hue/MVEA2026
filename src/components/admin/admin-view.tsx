@@ -16,6 +16,7 @@ import {
   Newspaper,
   Send,
   ShieldAlert,
+  Trash2,
   Users,
   X,
 } from "lucide-react";
@@ -35,6 +36,7 @@ import { categoryKey, POST_CATEGORIES } from "@/lib/categories";
 import { experienceLabel, formatShortDate } from "@/lib/format";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { useI18n } from "@/lib/i18n/provider";
+import { useSiteSettings } from "@/lib/cms/site-settings";
 import { saveMemberPhoto, useMemberPhotos } from "@/lib/photos/member-photos";
 import { listHireRequests, officialReplyBody, setHireStatus } from "@/lib/store/hire-store";
 import { uploadFile } from "@/lib/upload";
@@ -94,6 +96,7 @@ export function AdminView({ members, heroSlides, posts, pressArticles }: AdminVi
   const { user, ready, logout, mode } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("overview");
+  const { settings } = useSiteSettings();
 
   const [applications, setApplications] = useState<MembershipApplication[]>([]);
   const [inquiries, setInquiries] = useState<RecruiterInquiry[]>([]);
@@ -267,8 +270,9 @@ export function AdminView({ members, heroSlides, posts, pressArticles }: AdminVi
 
           {tab === "press" ? (
             <PressPanel
-              articles={allPress}
+              articles={allPress.filter((article) => !(settings.deletedIds?.press ?? []).includes(article.id))}
               onPublished={(article) => setPressOverrides((current) => [article, ...current])}
+              onDeleted={(id) => setPressOverrides((current) => current.filter((item) => item.id !== id))}
             />
           ) : null}
 
@@ -563,16 +567,30 @@ type OgPreview = {
 function PressPanel({
   articles,
   onPublished,
+  onDeleted,
 }: {
   articles: PressArticle[];
   onPublished: (article: PressArticle) => void;
+  onDeleted?: (id: string) => void;
 }) {
   const { t, lang, tx } = useI18n();
+  const { settings, save } = useSiteSettings();
+
+  async function removeItem(id: string) {
+    if (!window.confirm(t("admin.delete.confirm"))) return;
+    await save({
+      ...settings,
+      deletedIds: { ...settings.deletedIds, press: [...(settings.deletedIds?.press ?? []), id] },
+    });
+    onDeleted?.(id);
+  }
   const [url, setUrl] = useState("");
   const [preview, setPreview] = useState<OgPreview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const [published, setPublished] = useState(false);
+  const [customImage, setCustomImage] = useState("");
+  const [uploadingThumb, setUploadingThumb] = useState(false);
 
   async function fetchPreview() {
     setBusy(true);
@@ -603,7 +621,7 @@ function PressPanel({
       excerpt: { bn: preview.description, en: preview.description },
       source: preview.siteName,
       url: preview.url,
-      imageUrl: preview.image ?? "",
+      imageUrl: customImage || preview.image || "",
       publishedAt: preview.publishedAt ?? new Date().toISOString(),
       featured: false,
     };
@@ -612,6 +630,7 @@ function PressPanel({
     setPublished(true);
     setPreview(null);
     setUrl("");
+    setCustomImage("");
   }
 
   return (
@@ -661,6 +680,35 @@ function PressPanel({
                 </p>
               </div>
             </div>
+            <div className="border-t border-border px-4 py-3">
+              <Label htmlFor="press-thumb">{t("admin.thumb.override")}</Label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  id="press-thumb"
+                  value={customImage}
+                  onChange={(event) => setCustomImage(event.target.value)}
+                  placeholder={preview.image ?? "https://res.cloudinary.com/..."}
+                  dir="ltr"
+                />
+                <label className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-border px-3 text-xs font-semibold transition-colors hover:border-primary/50">
+                  {uploadingThumb ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <ImagePlus className="h-3.5 w-3.5" aria-hidden />}
+                  {t("admin.thumb.upload")}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      setUploadingThumb(true);
+                      void uploadFile(file, "image")
+                        .then((uploaded) => setCustomImage(uploaded))
+                        .finally(() => setUploadingThumb(false));
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
             <div className="flex flex-wrap items-center gap-2 border-t border-border bg-muted/40 px-4 py-3">
               <Button size="sm" onClick={() => void publish()} className="gap-1.5">
                 <Check className="h-3.5 w-3.5" aria-hidden />
@@ -686,15 +734,25 @@ function PressPanel({
                   {article.source} · {formatShortDate(article.publishedAt, lang)}
                 </p>
               </div>
-              <a
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-              >
-                {t("coverage.readOriginal")}
-                <ExternalLink className="h-3 w-3" aria-hidden />
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                >
+                  {t("coverage.readOriginal")}
+                  <ExternalLink className="h-3 w-3" aria-hidden />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => void removeItem(article.id)}
+                  className="inline-flex items-center gap-1 rounded-md border border-destructive/40 px-2 py-1 text-[0.7rem] font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-3 w-3" aria-hidden />
+                  {t("admin.delete")}
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -1091,12 +1149,23 @@ const EMPTY_RELEASE_FORM: ReleaseForm = {
 function PressReleasePanel({
   releases,
   onPublished,
+  onDeleted,
 }: {
   releases: PressRelease[];
   onPublished: (release: PressRelease) => void;
+  onDeleted?: (id: string) => void;
 }) {
   const { t, lang, tx } = useI18n();
+  const { settings, save } = useSiteSettings();
   const [url, setUrl] = useState("");
+  const [removed, setRemoved] = useState<string[]>([]);
+
+  async function removeRelease(id: string) {
+    if (!window.confirm(t("admin.delete.confirm"))) return;
+    await save({ ...settings, deletedIds: { ...settings.deletedIds, releases: [...(settings.deletedIds?.releases ?? []), id] } });
+    setRemoved((current) => [...current, id]);
+    onDeleted?.(id);
+  }
   const [form, setForm] = useState<ReleaseForm>(EMPTY_RELEASE_FORM);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -1338,7 +1407,7 @@ function PressReleasePanel({
           </p>
         ) : (
           <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-card">
-            {releases.map((release) => (
+            {releases.filter((release) => !removed.includes(release.id)).map((release) => (
               <li key={release.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{tx(release.title)}</p>
@@ -1346,15 +1415,25 @@ function PressReleasePanel({
                     {t("releases.badge")} · {formatShortDate(release.publishedAt, lang)}
                   </p>
                 </div>
-                <a
-                  href={release.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                >
-                  {t("releases.open")}
-                  <ExternalLink className="h-3 w-3" aria-hidden />
-                </a>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={release.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    {t("releases.open")}
+                    <ExternalLink className="h-3 w-3" aria-hidden />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => void removeRelease(release.id)}
+                    className="inline-flex items-center gap-1 rounded-md border border-destructive/40 px-2 py-1 text-[0.7rem] font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-3 w-3" aria-hidden />
+                    {t("admin.delete")}
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
