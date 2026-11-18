@@ -16,31 +16,50 @@ type DialogProps = {
 };
 
 /**
- * Minimal accessible modal: portal-free, Escape to close, scroll lock,
- * focus moved into the panel on open.
+ * Minimal accessible modal: Escape to close, scroll lock, focus moved into the
+ * panel once on open.
+ *
+ * IMPORTANT: the focus/scroll effect must only depend on `open`. Callers almost
+ * always pass an inline `onClose`, so including it in the dependency array made
+ * the effect re-run on every keystroke of a controlled field — re-focusing the
+ * panel, blurring the input and painting the focus ring around the dialog. The
+ * latest callback is kept in a ref instead.
  */
 export function Dialog({ open, onClose, title, description, children, footer, className }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
   const titleId = useId();
   const descriptionId = useId();
 
   useEffect(() => {
+    closeRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
     if (!open) return;
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        closeRef.current();
       }
     };
     document.addEventListener("keydown", onKeyDown);
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    panelRef.current?.focus();
+
+    // Only move focus when nothing inside the panel is focused yet.
+    const panel = panelRef.current;
+    if (panel && !panel.contains(document.activeElement)) {
+      panel.focus({ preventScroll: true });
+    }
+
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -50,7 +69,7 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
         type="button"
         aria-label="Close dialog"
         className="absolute inset-0 h-full w-full cursor-default bg-black/65 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
+        onClick={() => closeRef.current()}
         tabIndex={-1}
       />
       <div
@@ -61,7 +80,7 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         className={cn(
-          "relative z-10 w-full max-w-lg overflow-hidden rounded-t-xl border border-border bg-card text-card-foreground shadow-lift animate-fade-up sm:rounded-lg",
+          "relative z-10 w-full max-w-lg overflow-hidden rounded-t-xl border border-border bg-card text-card-foreground shadow-lift animate-fade-up outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 sm:rounded-lg",
           className,
         )}
       >
@@ -78,7 +97,7 @@ export function Dialog({ open, onClose, title, description, children, footer, cl
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => closeRef.current()}
             aria-label="Close dialog"
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >

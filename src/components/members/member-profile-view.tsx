@@ -104,7 +104,7 @@ export function MemberProfileView({ member }: { member: Member }) {
                   {t("member.cv.download")}
                 </Link>
                 <MemberActions member={member} />
-                <HireRequestButton member={{ id: member.id, name: name }} />
+                <HireRequestButton member={{ id: member.id, slug: member.slug, name: name }} />
               </div>
 
               {socials.length > 0 ? (

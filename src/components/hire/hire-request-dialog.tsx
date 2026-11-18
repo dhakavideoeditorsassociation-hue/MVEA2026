@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,39 +15,41 @@ type HireRequestDialogProps = {
   open: boolean;
   onClose: () => void;
   /** Optional member being requested; omit for a general request. */
-  member?: { id: string; name: string };
+  member?: { id: string; slug: string; name: string };
 };
 
 const EMPTY: HireDraft = {
+  memberSlug: "",
   memberId: "",
   memberName: "",
   organization: "",
   requesterName: "",
-  requesterRole: "",
+  designation: "",
   phone: "",
   email: "",
-  engagement: "full-time",
+  engagementType: "full-time",
   note: "",
 };
 
 /**
  * 2-step Request Editor flow: details → official confirmation.
+ * Writes straight to Firestore `hire_requests` on submit.
  */
 export function HireRequestDialog({ open, onClose, member }: HireRequestDialogProps) {
   const { t } = useI18n();
   const [step, setStep] = useState<1 | 2>(1);
   const [form, setForm] = useState<HireDraft>({ ...EMPTY });
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [result, setResult] = useState<HireRequest | null>(null);
 
-  function close() {
+  const close = useCallback(() => {
     setStep(1);
     setForm({ ...EMPTY });
-    setError(false);
+    setFailed(false);
     setResult(null);
     onClose();
-  }
+  }, [onClose]);
 
   function update<K extends keyof HireDraft>(key: K, value: HireDraft[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -57,7 +59,7 @@ export function HireRequestDialog({ open, onClose, member }: HireRequestDialogPr
     return Boolean(
       form.organization.trim() &&
         form.requesterName.trim() &&
-        form.requesterRole.trim() &&
+        form.designation.trim() &&
         form.phone.trim() &&
         /.+@.+\..+/.test(form.email),
     );
@@ -66,21 +68,22 @@ export function HireRequestDialog({ open, onClose, member }: HireRequestDialogPr
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!valid()) {
-      setError(true);
+      setFailed(true);
       return;
     }
     setBusy(true);
-    setError(false);
+    setFailed(false);
     try {
       const saved = await submitHireRequest({
         ...form,
         memberId: member?.id ?? form.memberId,
+        memberSlug: member?.slug ?? form.memberSlug,
         memberName: member?.name ?? form.memberName,
       });
       setResult(saved);
       setStep(2);
     } catch {
-      setError(true);
+      setFailed(true);
     } finally {
       setBusy(false);
     }
@@ -120,7 +123,7 @@ export function HireRequestDialog({ open, onClose, member }: HireRequestDialogPr
           </Button>
         </div>
       ) : (
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="space-y-4" noValidate>
           {member ? (
             <p className="rounded-md border border-primary/25 bg-primary/5 px-3 py-2 text-xs font-semibold text-foreground">
               {t("hire.forMember")}: {member.name}
@@ -132,38 +135,38 @@ export function HireRequestDialog({ open, onClose, member }: HireRequestDialogPr
               <Label htmlFor="hire-org">
                 {t("hire.organization")} <span className="text-primary">*</span>
               </Label>
-              <Input id="hire-org" value={form.organization} onChange={(e) => update("organization", e.target.value)} required />
+              <Input id="hire-org" value={form.organization} onChange={(e) => update("organization", e.target.value)} />
             </div>
             <div>
               <Label htmlFor="hire-name">
                 {t("hire.requester")} <span className="text-primary">*</span>
               </Label>
-              <Input id="hire-name" value={form.requesterName} onChange={(e) => update("requesterName", e.target.value)} required />
+              <Input id="hire-name" value={form.requesterName} onChange={(e) => update("requesterName", e.target.value)} />
             </div>
             <div>
               <Label htmlFor="hire-role">
                 {t("hire.role")} <span className="text-primary">*</span>
               </Label>
-              <Input id="hire-role" value={form.requesterRole} onChange={(e) => update("requesterRole", e.target.value)} required />
+              <Input id="hire-role" value={form.designation} onChange={(e) => update("designation", e.target.value)} />
             </div>
             <div>
               <Label htmlFor="hire-phone">
                 {t("hire.phone")} <span className="text-primary">*</span>
               </Label>
-              <Input id="hire-phone" type="tel" dir="ltr" value={form.phone} onChange={(e) => update("phone", e.target.value)} required />
+              <Input id="hire-phone" type="tel" dir="ltr" value={form.phone} onChange={(e) => update("phone", e.target.value)} />
             </div>
             <div>
               <Label htmlFor="hire-email">
                 {t("hire.email")} <span className="text-primary">*</span>
               </Label>
-              <Input id="hire-email" type="email" dir="ltr" value={form.email} onChange={(e) => update("email", e.target.value)} required />
+              <Input id="hire-email" type="email" dir="ltr" value={form.email} onChange={(e) => update("email", e.target.value)} />
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="hire-engagement">{t("hire.engagement")}</Label>
               <Select
                 id="hire-engagement"
-                value={form.engagement}
-                onChange={(e) => update("engagement", e.target.value as HireDraft["engagement"])}
+                value={form.engagementType}
+                onChange={(e) => update("engagementType", e.target.value as HireDraft["engagementType"])}
               >
                 <option value="full-time">{t("hire.engagementFull")}</option>
                 <option value="project">{t("hire.engagementProject")}</option>
@@ -176,7 +179,7 @@ export function HireRequestDialog({ open, onClose, member }: HireRequestDialogPr
             </div>
           </div>
 
-          {error ? (
+          {failed ? (
             <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {t("hire.error")}
             </p>

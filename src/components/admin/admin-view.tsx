@@ -39,7 +39,7 @@ import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { useI18n } from "@/lib/i18n/provider";
 import { useSiteSettings } from "@/lib/cms/site-settings";
 import { saveMemberPhoto, useMemberPhotos } from "@/lib/photos/member-photos";
-import { listHireRequests, officialReplyBody, setHireStatus } from "@/lib/store/hire-store";
+import { officialReplyBody, setHireStatus, subscribeHireRequests } from "@/lib/store/hire-store";
 import { uploadFile } from "@/lib/upload";
 import {
   addPost,
@@ -1656,17 +1656,12 @@ function HireRequestsPanel() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    void listHireRequests()
-      .then((records) => {
-        if (!cancelled) setItems(records);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+    // Live Firestore feed (newest first), merged with the local demo store.
+    const unsubscribe = subscribeHireRequests((records) => {
+      setItems(records);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   async function changeStatus(id: string, status: HireRequest["status"]) {
