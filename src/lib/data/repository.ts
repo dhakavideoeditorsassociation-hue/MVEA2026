@@ -50,6 +50,7 @@ export interface ContentRepository {
   getPostBySlug(slug: string): Promise<CmsPost | null>;
   listPressArticles(limit?: number): Promise<PressArticle[]>;
   listPressReleases(limit?: number): Promise<PressRelease[]>;
+  getPressReleaseBySlug(slug: string): Promise<PressRelease | null>;
   listCommittee(): Promise<CommitteeMember[]>;
   listStats(): Promise<AssociationStat[]>;
   getAssociation(): Promise<AssociationInfo>;

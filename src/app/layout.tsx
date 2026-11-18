@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Hind_Siliguri, Inter } from "next/font/google";
 
+import { AnnouncementTicker } from "@/components/layout/announcement-ticker";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Providers } from "@/components/providers";
-import { repo } from "@/lib/data";
 
 import "./globals.css";
 
@@ -80,8 +80,6 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const association = await repo.getAssociation();
-
   return (
     <html lang="bn" className={`${inter.variable} ${hindSiliguri.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased">
@@ -90,11 +88,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             Skip to content / মূল কনটেন্টে যান
           </a>
           <div className="flex min-h-screen flex-col">
+            <AnnouncementTicker />
             <SiteHeader />
             <main id="main" className="flex-1">
               {children}
             </main>
-            <SiteFooter association={association} />
+            <SiteFooter />
           </div>
         </Providers>
       </body>

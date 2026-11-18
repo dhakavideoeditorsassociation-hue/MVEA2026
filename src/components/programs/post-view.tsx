@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock, UserRound } from "lucide-react";
 
+import { Markdown } from "@/components/common/markdown";
 import { Badge } from "@/components/ui/badge";import { categoryKey } from "@/lib/categories";
 import { formatDate, formatNumber } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/provider";
@@ -17,11 +18,11 @@ export function PostView({ post, related }: { post: CmsPost; related: CmsPost[] 
       <header className="border-b border-border bg-muted/25">
         <div className="container py-10 lg:py-14">
           <Link
-            href="/programs"
+            href="/articles"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-            {t("programs.back")}
+            {t("articles.back")}
           </Link>
 
           <div className="mt-6 max-w-3xl">
@@ -29,7 +30,11 @@ export function PostView({ post, related }: { post: CmsPost; related: CmsPost[] 
             <h1 className="mt-4 text-balance text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl">
               {tx(post.title)}
             </h1>
-            <p className="mt-4 text-pretty text-base leading-relaxed text-muted-foreground">{tx(post.excerpt)}</p>
+            {post.subheadline ? (
+              <p className="mt-4 text-pretty text-lg font-medium leading-relaxed text-foreground/85">{tx(post.subheadline)}</p>
+            ) : (
+              <p className="mt-4 text-pretty text-base leading-relaxed text-muted-foreground">{tx(post.excerpt)}</p>
+            )}
 
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
@@ -62,12 +67,8 @@ export function PostView({ post, related }: { post: CmsPost; related: CmsPost[] 
             />
           </div>
 
-          <div className="mt-8 space-y-5">
-            {post.body.map((paragraph, index) => (
-              <p key={index} className="text-pretty text-base leading-[1.85] text-foreground/90">
-                {tx(paragraph)}
-              </p>
-            ))}
+          <div className="mt-8">
+            <Markdown text={post.body.map((paragraph) => tx(paragraph)).join("\\n\\n")} />
           </div>
 
           <div className="mt-8 flex flex-wrap gap-2 border-t border-border pt-5">
@@ -83,13 +84,13 @@ export function PostView({ post, related }: { post: CmsPost; related: CmsPost[] 
           {related.length > 0 ? (
             <div className="rounded-lg border border-border bg-card p-4 shadow-card">
               <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                {t("programs.related")}
+                {t("articles.related")}
               </h2>
               <ul className="mt-3 space-y-3">
                 {related.map((item) => (
                   <li key={item.id}>
                     <Link
-                      href={`/programs/${item.slug}`}
+                      href={`/articles/${item.slug}`}
                       className="block text-sm font-medium leading-snug text-foreground transition-colors hover:text-primary"
                     >
                       {tx(item.title)}

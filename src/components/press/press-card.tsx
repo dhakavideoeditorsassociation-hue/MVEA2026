@@ -24,7 +24,7 @@ export function PressCard({ article, className }: { article: PressArticle; class
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-muted">
         <Image
-          src={article.imageUrl}
+          src={article.imageUrl.startsWith("http") ? `/api/image-proxy?url=${encodeURIComponent(article.imageUrl)}` : article.imageUrl}
           alt={tx(article.title)}
           fill
           sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 90vw"

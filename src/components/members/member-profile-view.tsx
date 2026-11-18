@@ -16,6 +16,7 @@ import {
 
 import { Avatar } from "@/components/common/avatar";
 import { FacebookIcon, InstagramIcon, LinkedinIcon, VimeoIcon, YoutubeIcon } from "@/components/brand-icons";
+import { HireRequestButton } from "@/components/hire/hire-request-button";
 import { MemberActions } from "@/components/members/member-actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -103,6 +104,7 @@ export function MemberProfileView({ member }: { member: Member }) {
                   {t("member.cv.download")}
                 </Link>
                 <MemberActions member={member} />
+                <HireRequestButton member={{ id: member.id, name: name }} />
               </div>
 
               {socials.length > 0 ? (

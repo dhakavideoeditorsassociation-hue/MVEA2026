@@ -14,7 +14,7 @@ export default async function HomePage() {
   const [slides, featured, press, releases, posts, committee] = await Promise.all([
     repo.listHeroSlides(),
     repo.listFeaturedMembers(4),
-    repo.listPressArticles(3),
+    repo.listPressArticles(6),
     repo.listPressReleases(2),
     repo.listPosts({ limit: 3 }),
     repo.listCommittee(),
@@ -24,7 +24,8 @@ export default async function HomePage() {
     <HomeView
       slides={slides}
       featured={featured}
-      press={press}
+      press={press.slice(0, 3)}
+      pressMore={press.slice(3, 6)}
       releases={releases}
       posts={posts}
       committee={committee.slice(0, 6)}

@@ -6,27 +6,30 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 
-import { useI18n } from "@/lib/i18n/provider";
+import { useSiteSettings } from "@/lib/cms/site-settings";
 import type { HeroSlide } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const AUTOPLAY_MS = 8000;
 
 /**
- * Homepage hero: a fixed editorial statement over a slowly rotating backdrop.
+ * Homepage hero.
  *
- * Deliberately free of counters, arrows and caption strips — the backdrop is
- * atmosphere, not a slideshow the visitor has to operate. Autoplay pauses on
- * hover/focus and is disabled for `prefers-reduced-motion`.
+ * Copy comes from `site_settings.hero` (admin editable, dictionary fallback);
+ * the backdrop rotates through admin-uploaded photographs, or the seeded hero
+ * slides when no custom background exists. Each image gets a slow Ken Burns
+ * push and a cross-fade. No counters or control bars — the hero is atmosphere;
+ * autoplay pauses on hover/focus and is disabled for reduced motion.
  */
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
-  const { t, lang } = useI18n();
+  const { settings, tx, lang } = useSiteSettings();
   const reduceMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  const total = slides.length;
-  const active = slides[index];
+  const backgrounds = settings.hero.backgrounds.length > 0 ? settings.hero.backgrounds : slides.map((slide) => slide.imageUrl);
+  const total = backgrounds.length;
+  const active = backgrounds[index % Math.max(1, total)];
 
   const advance = useCallback(() => {
     if (total < 2) return;
@@ -41,7 +44,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
   return (
     <section
-      aria-label={t("hero.eyebrow")}
+      aria-label={tx(settings.hero.eyebrow)}
       className="relative isolate overflow-hidden border-b border-border bg-[#05070d]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -52,7 +55,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         {active ? (
           <AnimatePresence initial={false}>
             <motion.div
-              key={active.id}
+              key={`${active}-${index}`}
               className="absolute inset-0"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -60,13 +63,13 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
             >
               <Image
-                src={active.imageUrl}
+                src={active}
                 alt=""
                 fill
                 priority
                 sizes="100vw"
-                className="object-cover object-center"
                 unoptimized
+                className="ken-burns object-cover object-center"
               />
             </motion.div>
           </AnimatePresence>
@@ -90,7 +93,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
               </span>
-              {t("hero.eyebrow")}
+              {tx(settings.hero.eyebrow)}
             </motion.p>
 
             <motion.h1
@@ -104,7 +107,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                   : "text-3xl leading-[1.08] tracking-tight sm:text-4xl lg:text-[3.4rem] lg:leading-[1.02]",
               )}
             >
-              {t("hero.headline")}
+              {tx(settings.hero.headline)}
             </motion.h1>
 
             <motion.p
@@ -116,7 +119,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 lang === "bn" ? "leading-[1.95]" : "leading-relaxed",
               )}
             >
-              {t("hero.subheadline")}
+              {tx(settings.hero.subheadline)}
             </motion.p>
 
             <motion.div
@@ -129,14 +132,14 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 href="/register"
                 className="inline-flex h-12 items-center gap-2 rounded-md bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-transform duration-200 ease-smooth hover:-translate-y-0.5"
               >
-                {t("hero.primaryCta")}
+                {tx(settings.hero.primaryCta)}
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
               <Link
                 href="/members"
                 className="inline-flex h-12 items-center gap-2 rounded-md border border-white/25 bg-white/5 px-6 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/15"
               >
-                {t("hero.secondaryCta")}
+                {tx(settings.hero.secondaryCta)}
                 <ArrowUpRight className="h-4 w-4" aria-hidden />
               </Link>
             </motion.div>

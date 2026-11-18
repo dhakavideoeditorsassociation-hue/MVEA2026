@@ -65,6 +65,40 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Site-wide editable copy (hero, pillars, policies, ticker, contacts).
+    // Publicly readable so the site can hydrate without auth; admin-only writes.
+    match /site_settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Educational articles (rich body, cover and inline images).
+    match /articles/{articleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Editor toolkit entries (verified organisations, cheatsheets).
+    match /resources/{resourceId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Recruiter hire requests: anyone may create a validated request, only
+    // admins can read the pipeline or change the status.
+    match /hire_requests/{requestId} {
+      allow create: if request.resource.data.keys().hasAll(
+          ['organization', 'requesterName', 'requesterRole', 'phone', 'email', 'engagement', 'status', 'createdAt'])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.organization is string
+        && request.resource.data.organization.size() < 200
+        && request.resource.data.requesterName is string
+        && request.resource.data.requesterName.size() < 160
+        && request.resource.data.email is string
+        && request.resource.data.email.size() < 200
+        && request.resource.data.engagement in ['full-time', 'project', 'documentary'];
+      allow read, update, delete: if isAdmin();
+    }
     match /hero_slides/{slideId} {
       allow read: if true;
       allow write: if isAdmin();

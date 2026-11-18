@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Check, ShieldCheck } from "lucide-react";
 
 import { PageHero } from "@/components/common/page-hero";
+import { useSiteSettings } from "@/lib/cms/site-settings";
 import { buttonVariants } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/provider";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
@@ -35,6 +36,7 @@ const FAQ: Array<{ q: TranslationKey; a: TranslationKey }> = [
 
 export function AboutView({ stats }: { stats: AssociationStat[] }) {
   const { t, tx } = useI18n();
+  const { settings } = useSiteSettings();
 
   return (
     <>
@@ -44,7 +46,7 @@ export function AboutView({ stats }: { stats: AssociationStat[] }) {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{t("about.mission.title")}</h2>
-            <p className="mt-4 text-pretty text-base leading-[1.85] text-muted-foreground">{t("about.mission.body")}</p>
+            <p className="mt-4 whitespace-pre-line text-pretty text-base leading-[1.85] text-muted-foreground">{tx(settings.policies.about)}</p>
             <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {stats.map((stat) => (
                 <div key={stat.id} className="rounded-lg border border-border bg-card px-3 py-4 text-center">
@@ -77,6 +79,20 @@ export function AboutView({ stats }: { stats: AssociationStat[] }) {
         </div>
       </section>
 
+      <section className="container pb-12">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            { key: "ethics", title: t("about.ethics.title"), body: tx(settings.policies.ethics) },
+            { key: "membership", title: t("footer.membership"), body: tx(settings.policies.membership) },
+            { key: "recruiters", title: t("footer.recruiters"), body: tx(settings.policies.recruiters) },
+          ].map((policy) => (
+            <article key={policy.key} className="rounded-lg border border-border bg-card p-5 shadow-card">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-primary">{policy.title}</h2>
+              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{policy.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
       <section className="border-y border-border bg-muted/25">
         <div className="container py-12 lg:py-16">
           <div className="flex items-center gap-2.5">

@@ -46,8 +46,8 @@ export function MemberCvView({ member }: { member: Member }) {
         </button>
       </div>
 
-      <article className="rounded-lg border border-border bg-card p-8 text-card-foreground shadow-card print:border-0 print:bg-white print:p-0 print:text-black">
-        <header className="flex items-start gap-5 border-b border-border pb-5 print:border-black/20">
+      <article className="cv-page rounded-lg border border-border bg-card p-8 text-card-foreground shadow-card print:border-0 print:bg-white print:p-0 print:text-black">
+        <header className="cv-section flex items-start gap-5 border-b border-border pb-5 print:border-black/20">
           <span className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-white ring-1 ring-border">
             {portrait ? (
               <Image src={portrait} alt="" fill sizes="80px" unoptimized className="object-cover" />
@@ -87,7 +87,7 @@ export function MemberCvView({ member }: { member: Member }) {
           ) : null}
         </dl>
 
-        <section className="mt-5">
+        <section className="cv-section mt-5">
           <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
             {t("member.about")}
           </h2>
@@ -95,7 +95,7 @@ export function MemberCvView({ member }: { member: Member }) {
         </section>
 
         {member.workHistory.length > 0 ? (
-          <section className="mt-6">
+          <section className="cv-section mt-6">
             <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
               {t("member.timeline")}
             </h2>
@@ -116,7 +116,7 @@ export function MemberCvView({ member }: { member: Member }) {
         ) : null}
 
         {member.skills.length > 0 || member.tools.length > 0 ? (
-          <section className="mt-6 grid gap-5 sm:grid-cols-2">
+          <section className="cv-section mt-6 grid gap-5 sm:grid-cols-2">
             {member.skills.length > 0 ? (
               <div>
                 <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
@@ -137,7 +137,7 @@ export function MemberCvView({ member }: { member: Member }) {
         ) : null}
 
         {member.showreelUrl ? (
-          <section className="mt-6">
+          <section className="cv-section mt-6">
             <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-primary print:text-black">
               {t("member.showreel")}
             </h2>

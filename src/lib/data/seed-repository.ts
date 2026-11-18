@@ -79,6 +79,10 @@ export function createSeedRepository(): ContentRepository {
       return limit ? sorted.slice(0, limit) : sorted;
     },
 
+    async getPressReleaseBySlug(slug: string) {
+      return releases.find((release) => release.slug === slug) ?? null;
+    },
+
     async listCommittee() {
       const committee: CommitteeMember[] = [...seedCommittee];
       return committee.sort((a, b) => a.order - b.order);

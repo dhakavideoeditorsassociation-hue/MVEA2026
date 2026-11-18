@@ -1,4 +1,5 @@
 import type { Lang } from "@/lib/types";
+import { extraBn, extraEn } from "./extra";
 
 /**
  * Interface copy for the Media Video Editors Association platform.
@@ -247,8 +248,6 @@ const en = {
   "committee.group.members": "Members",
   "committee.formerInfo": "Committee formed",
 
-  "footer.about":
-    "A professional association for television, broadcast, digital newsroom and multimedia video editors and visualizers in Bangladesh.",
   "footer.explore": "Explore",
   "footer.resources": "Resources",
   "footer.contact": "Contact",
@@ -475,9 +474,9 @@ const en = {
   "admin.loading": "Loading dashboard data…",
 } as const;
 
-export type TranslationKey = keyof typeof en;
+export type TranslationKey = keyof typeof en | keyof typeof extraEn;
 
-const bn: Record<TranslationKey, string> = {
+const bn: Record<keyof typeof en, string> = {
   "brand.short": "এমভিইএ",
   "brand.name": "গণমাধ্যম ভিডিও এডিটরস অ্যাসোসিয়েশন",
   "brand.tagline": "বাংলাদেশে কর্মরত মিডিয়া ভিডিও এডিটর ও ভিজ্যুয়ালাইজারদের জাতীয় প্ল্যাটফর্ম",
@@ -714,8 +713,6 @@ const bn: Record<TranslationKey, string> = {
   "committee.group.members": "সদস্যবৃন্দ",
   "committee.formerInfo": "কমিটি গঠন",
 
-  "footer.about":
-    "বাংলাদেশের টেলিভিশন, সম্প্রচার, ডিজিটাল নিউজরুম ও মাল্টিমিডিয়া ভিডিও এডিটর এবং ভিজ্যুয়ালাইজারদের পেশাজীবী সংগঠন।",
   "footer.explore": "ঘুরে দেখুন",
   "footer.resources": "রিসোর্স",
   "footer.contact": "যোগাযোগ",
@@ -944,7 +941,10 @@ const bn: Record<TranslationKey, string> = {
   "admin.loading": "ড্যাশবোর্ড ডেটা লোড হচ্ছে…",
 };
 
-export const dictionaries: Record<Lang, Record<TranslationKey, string>> = { en, bn };
+export const dictionaries: Record<Lang, Record<TranslationKey, string>> = {
+  en: { ...en, ...extraEn } as Record<TranslationKey, string>,
+  bn: { ...bn, ...extraBn } as Record<TranslationKey, string>,
+};
 
 export const DEFAULT_LANG: Lang = "bn";
 

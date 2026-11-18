@@ -14,16 +14,17 @@ type ProgramsViewProps = {
   posts: CmsPost[];
   activeCategory?: PostCategory;
   counts: Record<string, number>;
+  basePath?: string;
 };
 
-export function ProgramsView({ posts, activeCategory, counts }: ProgramsViewProps) {
+export function ProgramsView({ posts, activeCategory, counts, basePath = "/articles" }: ProgramsViewProps) {
   const { t } = useI18n();
 
   const tabs: Array<{ key: string; href: string; label: string; count: number }> = [
-    { key: "all", href: "/programs", label: t("programs.filter.all"), count: counts.all ?? 0 },
+    { key: "all", href: basePath, label: t("programs.filter.all"), count: counts.all ?? 0 },
     ...POST_CATEGORIES.map((category) => ({
       key: category,
-      href: `/programs?category=${category}`,
+      href: `${basePath}?category=${category}`,
       label: t(categoryKey(category)),
       count: counts[category] ?? 0,
     })),
@@ -31,8 +32,8 @@ export function ProgramsView({ posts, activeCategory, counts }: ProgramsViewProp
 
   return (
     <>
-      <PageHero eyebrow={t("programs.eyebrow")} title={t("programs.title")} subtitle={t("programs.subtitle")}>
-        <nav aria-label={t("programs.eyebrow")} className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto pb-1">
+      <PageHero eyebrow={t("articles.eyebrow")} title={t("articles.title")} subtitle={t("articles.subtitle")}>
+        <nav aria-label={t("articles.eyebrow")} className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto pb-1">
           {tabs.map((tab) => {
             const isActive = activeCategory ? tab.key === activeCategory : tab.key === "all";
             return (
@@ -63,9 +64,9 @@ export function ProgramsView({ posts, activeCategory, counts }: ProgramsViewProp
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-muted text-muted-foreground">
               <FolderOpen className="h-5 w-5" aria-hidden />
             </span>
-            <h2 className="mt-4 text-lg font-semibold text-foreground">{t("programs.empty.title")}</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("programs.empty.body")}</p>
-            <Link href="/programs" className="mt-6 inline-block text-sm font-semibold text-primary hover:underline">
+            <h2 className="mt-4 text-lg font-semibold text-foreground">{t("articles.empty.title")}</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("articles.empty.body")}</p>
+            <Link href={basePath} className="mt-6 inline-block text-sm font-semibold text-primary hover:underline">
               {t("programs.filter.all")}
             </Link>
           </div>

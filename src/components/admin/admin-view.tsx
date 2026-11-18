@@ -14,6 +14,7 @@ import {
   Loader2,
   LogOut,
   Newspaper,
+  Send,
   ShieldAlert,
   Users,
   X,
@@ -21,6 +22,9 @@ import {
 
 import { FacebookIcon } from "@/components/brand-icons";
 import { Avatar } from "@/components/common/avatar";
+import { Markdown } from "@/components/common/markdown";
+import { MemberCreatePanel } from "@/components/admin/member-create-panel";
+import { SiteContentPanel } from "@/components/admin/site-content-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label, Select, Textarea } from "@/components/ui/form-controls";
@@ -32,6 +36,7 @@ import { experienceLabel, formatShortDate } from "@/lib/format";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { useI18n } from "@/lib/i18n/provider";
 import { saveMemberPhoto, useMemberPhotos } from "@/lib/photos/member-photos";
+import { listHireRequests, officialReplyBody, setHireStatus } from "@/lib/store/hire-store";
 import { uploadFile } from "@/lib/upload";
 import {
   addPost,
@@ -51,6 +56,7 @@ import {
 } from "@/lib/store/admin-store";
 import type {
   CmsPost,
+  HireRequest,
   HeroSlide,
   Member,
   MembershipApplication,
@@ -60,7 +66,7 @@ import type {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type Tab = "overview" | "applications" | "ranking" | "press" | "releases" | "inquiries" | "hero" | "posts";
+type Tab = "overview" | "applications" | "ranking" | "press" | "releases" | "inquiries" | "requests" | "content" | "add-member" | "hero" | "posts";
 
 const TABS: Array<{ id: Tab; key: TranslationKey }> = [
   { id: "overview", key: "admin.tab.overview" },
@@ -69,6 +75,9 @@ const TABS: Array<{ id: Tab; key: TranslationKey }> = [
   { id: "press", key: "admin.tab.press" },
   { id: "releases", key: "admin.tab.releases" },
   { id: "inquiries", key: "admin.tab.inquiries" },
+  { id: "requests", key: "hire.cta" },
+  { id: "content", key: "admin.tab.content" },
+  { id: "add-member", key: "admin.tab.addMember" },
   { id: "hero", key: "admin.tab.hero" },
   { id: "posts", key: "admin.tab.posts" },
 ];
@@ -271,6 +280,10 @@ export function AdminView({ members, heroSlides, posts, pressArticles }: AdminVi
           ) : null}
 
           {tab === "inquiries" ? <InquiriesPanel inquiries={inquiries} /> : null}
+
+          {tab === "requests" ? <HireRequestsPanel /> : null}
+          {tab === "content" ? <SiteContentPanel /> : null}
+          {tab === "add-member" ? <MemberCreatePanel members={members} /> : null}
 
           {tab === "hero" ? (
             <HeroPanel
@@ -789,11 +802,16 @@ function PostsPanel({ posts, onPublished }: { posts: CmsPost[]; onPublished: (po
     category: POST_CATEGORIES[0],
     titleBn: "",
     titleEn: "",
+    subheadlineBn: "",
+    subheadlineEn: "",
     excerptBn: "",
     excerptEn: "",
     bodyBn: "",
     bodyEn: "",
+    coverImageUrl: "",
   });
+  const [preview, setPreview] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   async function publish(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -806,11 +824,14 @@ function PostsPanel({ posts, onPublished }: { posts: CmsPost[]; onPublished: (po
           .slice(-4)}`,
         category: form.category,
         title: { bn: form.titleBn || form.titleEn, en: form.titleEn || form.titleBn },
+        subheadline: { bn: form.subheadlineBn || form.subheadlineEn, en: form.subheadlineEn || form.subheadlineBn },
         excerpt: { bn: form.excerptBn || form.excerptEn, en: form.excerptEn || form.excerptBn },
         body: [
           { bn: form.bodyBn || form.bodyEn, en: form.bodyEn || form.bodyBn },
         ].filter((paragraph) => paragraph.en.trim().length > 0),
-        coverImageUrl: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1600&q=80",
+        coverImageUrl:
+          form.coverImageUrl ||
+          "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=1600&q=80",
         author: "Association secretariat",
         publishedAt: new Date().toISOString(),
         readingMinutes: 3,
@@ -820,7 +841,18 @@ function PostsPanel({ posts, onPublished }: { posts: CmsPost[]; onPublished: (po
       await addPost(post);
       onPublished(post);
       setPublished(true);
-      setForm({ category: POST_CATEGORIES[0], titleBn: "", titleEn: "", excerptBn: "", excerptEn: "", bodyBn: "", bodyEn: "" });
+      setForm({
+        category: POST_CATEGORIES[0],
+        titleBn: "",
+        titleEn: "",
+        subheadlineBn: "",
+        subheadlineEn: "",
+        excerptBn: "",
+        excerptEn: "",
+        bodyBn: "",
+        bodyEn: "",
+        coverImageUrl: "",
+      });
     } finally {
       setBusy(false);
     }
@@ -866,6 +898,14 @@ function PostsPanel({ posts, onPublished }: { posts: CmsPost[]; onPublished: (po
               />
             </div>
             <div>
+              <Label htmlFor="subheadlineBn">{t("articles.subheadlineBn")}</Label>
+              <Input id="subheadlineBn" value={form.subheadlineBn} onChange={(event) => setForm((current) => ({ ...current, subheadlineBn: event.target.value }))} />
+            </div>
+            <div>
+              <Label htmlFor="subheadlineEn">{t("articles.subheadlineEn")}</Label>
+              <Input id="subheadlineEn" value={form.subheadlineEn} onChange={(event) => setForm((current) => ({ ...current, subheadlineEn: event.target.value }))} />
+            </div>
+            <div>
               <Label htmlFor="excerptBn">{t("admin.posts.excerptB")}</Label>
               <Textarea
                 id="excerptBn"
@@ -883,23 +923,108 @@ function PostsPanel({ posts, onPublished }: { posts: CmsPost[]; onPublished: (po
                 onChange={(event) => setForm((current) => ({ ...current, excerptEn: event.target.value }))}
               />
             </div>
-            <div>
-              <Label htmlFor="bodyBn">{t("admin.posts.bodyB")}</Label>
-              <Textarea
-                id="bodyBn"
-                rows={4}
-                value={form.bodyBn}
-                onChange={(event) => setForm((current) => ({ ...current, bodyBn: event.target.value }))}
-              />
+            <div className="sm:col-span-2">
+              <Label htmlFor="coverImageUrl">{t("articles.cover")}</Label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  id="coverImageUrl"
+                  value={form.coverImageUrl}
+                  onChange={(event) => setForm((current) => ({ ...current, coverImageUrl: event.target.value }))}
+                  placeholder="https://res.cloudinary.com/..."
+                  dir="ltr"
+                />
+                <label className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-border px-3 text-xs font-semibold transition-colors hover:border-primary/50">
+                  {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <ImagePlus className="h-3.5 w-3.5" aria-hidden />}
+                  {t("dashboard.upload.choose")}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      setUploadingCover(true);
+                      void uploadFile(file, "image")
+                        .then((uploaded) => setForm((current) => ({ ...current, coverImageUrl: uploaded })))
+                        .finally(() => setUploadingCover(false));
+                    }}
+                  />
+                </label>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="bodyEn">{t("admin.posts.bodyE")}</Label>
-              <Textarea
-                id="bodyEn"
-                rows={4}
-                value={form.bodyEn}
-                onChange={(event) => setForm((current) => ({ ...current, bodyEn: event.target.value }))}
-              />
+
+            <div className="sm:col-span-2">
+              <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                {[
+                  { label: "## " + t("articles.toolbar.h2"), snippet: "\n## Subheading\n" },
+                  { label: "B", snippet: " **bold text** " },
+                  { label: "• " + t("articles.toolbar.bullets"), snippet: "\n- first point\n- second point\n" },
+                  { label: "1. " + t("articles.toolbar.numbered"), snippet: "\n1. first step\n2. second step\n" },
+                  {
+                    label: "| " + t("articles.toolbar.table"),
+                    snippet: "\n| Column | Column |\n| --- | --- |\n| Value | Value |\n",
+                  },
+                ].map((tool) => (
+                  <button
+                    key={tool.label}
+                    type="button"
+                    onClick={() => setForm((current) => ({ ...current, bodyEn: `${current.bodyEn}${tool.snippet}` }))}
+                    className="rounded-md border border-border px-2 py-1 text-[0.7rem] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                  >
+                    {tool.label}
+                  </button>
+                ))}
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[0.7rem] font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground">
+                  <ImagePlus className="h-3 w-3" aria-hidden />
+                  {t("articles.toolbar.image")}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      void uploadFile(file, "image").then((uploaded) =>
+                        setForm((current) => ({ ...current, bodyEn: `${current.bodyEn}\n![image](${uploaded})\n` })),
+                      );
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setPreview((value) => !value)}
+                  className="ml-auto rounded-md border border-primary/40 px-2 py-1 text-[0.7rem] font-semibold text-primary"
+                >
+                  {preview ? t("articles.edit") : t("articles.preview")}
+                </button>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="bodyBn">{t("admin.posts.bodyB")}</Label>
+                  <Textarea
+                    id="bodyBn"
+                    rows={10}
+                    value={form.bodyBn}
+                    onChange={(event) => setForm((current) => ({ ...current, bodyBn: event.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="bodyEn">{t("articles.body")}</Label>
+                  {preview ? (
+                    <div className="max-h-72 overflow-y-auto rounded-md border border-border bg-background p-3">
+                      <Markdown text={form.bodyEn || form.bodyBn} />
+                    </div>
+                  ) : (
+                    <Textarea
+                      id="bodyEn"
+                      rows={10}
+                      value={form.bodyEn}
+                      onChange={(event) => setForm((current) => ({ ...current, bodyEn: event.target.value }))}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -932,16 +1057,26 @@ function PostsPanel({ posts, onPublished }: { posts: CmsPost[]; onPublished: (po
 type ReleaseForm = {
   titleBn: string;
   titleEn: string;
+  subheadlineBn: string;
+  subheadlineEn: string;
   excerptBn: string;
   excerptEn: string;
+  bodyBn: string;
+  bodyEn: string;
+  refNo: string;
   imageUrl: string;
 };
 
 const EMPTY_RELEASE_FORM: ReleaseForm = {
   titleBn: "",
   titleEn: "",
+  subheadlineBn: "",
+  subheadlineEn: "",
   excerptBn: "",
   excerptEn: "",
+  bodyBn: "",
+  bodyEn: "",
+  refNo: "",
   imageUrl: "",
 };
 
@@ -999,8 +1134,13 @@ function PressReleasePanel({
       setForm({
         titleBn: payload.data.title,
         titleEn: payload.data.title,
+        subheadlineBn: "",
+        subheadlineEn: "",
         excerptBn: payload.data.description,
         excerptEn: payload.data.description,
+        bodyBn: "",
+        bodyEn: "",
+        refNo: "",
         imageUrl: payload.data.image ?? "",
       });
     } catch {
@@ -1025,8 +1165,14 @@ function PressReleasePanel({
     event.preventDefault();
     const release: PressRelease = {
       id: `release-${Date.now()}`,
+      slug: (form.titleEn || form.titleBn).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `statement-${Date.now()}`,
       title: { bn: form.titleBn || form.titleEn, en: form.titleEn || form.titleBn },
+      subheadline: { bn: form.subheadlineBn || form.subheadlineEn, en: form.subheadlineEn || form.subheadlineBn },
       excerpt: { bn: form.excerptBn || form.excerptEn, en: form.excerptEn || form.excerptBn },
+      body: (form.bodyBn || form.bodyEn)
+        ? [{ bn: form.bodyBn || form.bodyEn, en: form.bodyEn || form.bodyBn }]
+        : [{ bn: form.excerptBn || form.excerptEn, en: form.excerptEn || form.excerptBn }],
+      refNo: form.refNo || undefined,
       url: url.trim(),
       imageUrl: form.imageUrl,
       publishedAt: new Date().toISOString(),
@@ -1092,6 +1238,18 @@ function PressReleasePanel({
                 />
               </div>
               <div>
+                <Label htmlFor="release-sub-bn">{t("admin.releases.subheadlineBn")}</Label>
+                <Textarea id="release-sub-bn" rows={2} value={form.subheadlineBn} onChange={(event) => setForm((current) => ({ ...current, subheadlineBn: event.target.value }))} />
+              </div>
+              <div>
+                <Label htmlFor="release-sub-en">{t("admin.releases.subheadlineEn")}</Label>
+                <Textarea id="release-sub-en" rows={2} value={form.subheadlineEn} onChange={(event) => setForm((current) => ({ ...current, subheadlineEn: event.target.value }))} />
+              </div>
+              <div>
+                <Label htmlFor="release-ref">{t("admin.releases.refNo")}</Label>
+                <Input id="release-ref" value={form.refNo} onChange={(event) => setForm((current) => ({ ...current, refNo: event.target.value }))} placeholder="MVEA/PR/2026-03" dir="ltr" />
+              </div>
+              <div>
                 <Label htmlFor="release-excerpt-bn">{t("admin.releases.excerptBn")}</Label>
                 <Textarea
                   id="release-excerpt-bn"
@@ -1111,7 +1269,17 @@ function PressReleasePanel({
               </div>
             </div>
 
-            <div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="release-body-bn">{t("admin.releases.bodyBn")}</Label>
+                <Textarea id="release-body-bn" rows={6} value={form.bodyBn} onChange={(event) => setForm((current) => ({ ...current, bodyBn: event.target.value }))} />
+              </div>
+              <div>
+                <Label htmlFor="release-body-en">{t("admin.releases.bodyEn")}</Label>
+                <Textarea id="release-body-en" rows={6} value={form.bodyEn} onChange={(event) => setForm((current) => ({ ...current, bodyEn: event.target.value }))} />
+              </div>
+            </div>
+`r`n            <div>
               <Label htmlFor="release-image">{t("admin.releases.image")}</Label>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
@@ -1302,5 +1470,120 @@ function MemberPhotosPanel({ members }: { members: Member[] }) {
         ))}
       </ul>
     </section>
+  );
+}
+/** Recruiter requests: status workflow plus the official reply template. */
+function HireRequestsPanel() {
+  const { t, lang } = useI18n();
+  const [items, setItems] = useState<HireRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void listHireRequests()
+      .then((records) => {
+        if (!cancelled) setItems(records);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function changeStatus(id: string, status: HireRequest["status"]) {
+    await setHireStatus(id, status);
+    setItems((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
+  }
+
+  function reply(item: HireRequest) {
+    const subject = `MVEA verification - ${item.organization}`;
+    const body = officialReplyBody(item);
+    window.location.href = `mailto:${item.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  async function copy(item: HireRequest) {
+    try {
+      await navigator.clipboard.writeText(officialReplyBody(item));
+      setCopiedId(item.id);
+      window.setTimeout(() => setCopiedId(null), 1800);
+    } catch {
+      /* clipboard blocked */
+    }
+  }
+
+  if (loading) {
+    return (
+      <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+        {t("admin.loading")}
+      </p>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <p className="rounded-lg border border-dashed border-border bg-card/60 px-5 py-10 text-center text-sm text-muted-foreground">
+        {t("admin.inquiries.empty")}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t("hire.cta")}</h2>
+      {items.map((item) => (
+        <article key={item.id} className="rounded-lg border border-border bg-card p-5 shadow-card">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">{item.organization}</p>
+              <p className="text-xs text-muted-foreground">
+                {item.requesterName} · {item.requesterRole} · {formatShortDate(item.createdAt, lang)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground" dir="ltr">
+                {item.email} · {item.phone}
+              </p>
+            </div>
+            <Select
+              value={item.status}
+              onChange={(event) => void changeStatus(item.id, event.target.value as HireRequest["status"])}
+              aria-label={t("verify.status")}
+              className="h-8 w-44 text-xs"
+            >
+              <option value="pending">Pending</option>
+              <option value="availability-checked">Availability checked</option>
+              <option value="email-sent">Official email sent</option>
+            </Select>
+          </div>
+
+          <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+            <div>
+              <dt className="font-semibold text-muted-foreground">{t("hire.forMember")}</dt>
+              <dd className="text-foreground">{item.memberName || "—"}</dd>
+            </div>
+            <div>
+              <dt className="font-semibold text-muted-foreground">{t("hire.engagement")}</dt>
+              <dd className="text-foreground">{item.engagement}</dd>
+            </div>
+          </dl>
+
+          {item.note ? <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.note}</p> : null}
+
+          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/70 pt-3">
+            <Button size="sm" onClick={() => reply(item)} className="gap-1.5">
+              <Send className="h-3.5 w-3.5" aria-hidden />
+              Send official verification email
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => void copy(item)} className="gap-1.5">
+              {copiedId === item.id ? <Check className="h-3.5 w-3.5 text-primary" aria-hidden /> : <FileText className="h-3.5 w-3.5" aria-hidden />}
+              {copiedId === item.id ? t("pressrelease.copied") : t("pressrelease.copy")}
+            </Button>
+            <span className="ml-auto font-mono text-[0.65rem] text-muted-foreground">{item.id}</span>
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }

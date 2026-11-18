@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
 
 import { ProgramsView } from "@/components/programs/programs-view";
-import { repo } from "@/lib/data";
 import { isPostCategory } from "@/lib/categories";
+import { repo } from "@/lib/data";
 
+/**
+ * Legacy URL. `/articles` is canonical, so this route renders the same view with
+ * a canonical tag and noindex to avoid duplicate indexing, and keeps old links
+ * (and shared Facebook posts) working.
+ */
 export const metadata: Metadata = {
-  title: "Articles & Features",
-  description:
-    "Craft notes, footage verification guides, visual journalism ethics and newsroom lab announcements published by the Media Video Editors Association.",
-  alternates: { canonical: "/programs" },
+  title: "Articles",
+  alternates: { canonical: "/articles" },
+  robots: { index: false, follow: true },
 };
 
 type PageProps = { searchParams: { category?: string } };
 
-export default async function ProgramsPage({ searchParams }: PageProps) {
+export default async function ProgramsLegacyPage({ searchParams }: PageProps) {
   const activeCategory = isPostCategory(searchParams.category) ? searchParams.category : undefined;
 
   const [posts, allPosts] = await Promise.all([
@@ -26,5 +30,5 @@ export default async function ProgramsPage({ searchParams }: PageProps) {
     counts[post.category] = (counts[post.category] ?? 0) + 1;
   });
 
-  return <ProgramsView posts={posts} activeCategory={activeCategory} counts={counts} />;
+  return <ProgramsView posts={posts} activeCategory={activeCategory} counts={counts} basePath="/articles" />;
 }

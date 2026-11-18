@@ -11,7 +11,7 @@ import { useI18n } from "@/lib/i18n/provider";
 import type { CmsPost } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function PostCard({ post, className }: { post: CmsPost; className?: string }) {
+export function PostCard({ post, className, basePath = "/articles" }: { post: CmsPost; className?: string; basePath?: string }) {
   const { t, lang, tx } = useI18n();
 
   return (
@@ -21,7 +21,7 @@ export function PostCard({ post, className }: { post: CmsPost; className?: strin
         className,
       )}
     >
-      <Link href={`/programs/${post.slug}`} className="relative block aspect-[16/9] overflow-hidden bg-muted">
+      <Link href={`${basePath}/${post.slug}`} className="relative block aspect-[16/9] overflow-hidden bg-muted">
         <Image
           src={post.coverImageUrl}
           alt={tx(post.title)}
@@ -40,7 +40,7 @@ export function PostCard({ post, className }: { post: CmsPost; className?: strin
           </span>
         </div>
         <h3 className="text-balance text-base font-semibold leading-snug text-foreground">
-          <Link href={`/programs/${post.slug}`} className="transition-colors hover:text-primary">
+          <Link href={`${basePath}/${post.slug}`} className="transition-colors hover:text-primary">
             {tx(post.title)}
           </Link>
         </h3>
@@ -50,7 +50,7 @@ export function PostCard({ post, className }: { post: CmsPost; className?: strin
             {formatShortDate(post.publishedAt, lang)}
           </time>
           <Link
-            href={`/programs/${post.slug}`}
+            href={`${basePath}/${post.slug}`}
             className="inline-flex items-center gap-1 text-xs font-semibold text-primary"
           >
             {t("programs.card.read")}

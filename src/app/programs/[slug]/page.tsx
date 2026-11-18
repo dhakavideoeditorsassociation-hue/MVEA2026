@@ -6,9 +6,6 @@ import { repo } from "@/lib/data";
 
 type PageProps = { params: { slug: string } };
 
-// Detail pages are pre-rendered from the current dataset (see generateStaticParams).
-// Unknown slugs render the branded not-found page; Next caches that response, so
-// the HTTP status stays 200. Use middleware or ISR if a hard 404 is required.
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
@@ -21,19 +18,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!post) notFound();
   return {
     title: post.title.en,
-    description: post.excerpt.en,
-    alternates: { canonical: `/programs/${post.slug}` },
-    openGraph: {
-      title: post.title.en,
-      description: post.excerpt.en,
-      type: "article",
-      publishedTime: post.publishedAt,
-      images: [{ url: post.coverImageUrl }],
-    },
+    alternates: { canonical: `/articles/${post.slug}` },
+    robots: { index: false, follow: true },
   };
 }
 
-export default async function PostPage({ params }: PageProps) {
+export default async function ProgramLegacyPage({ params }: PageProps) {
   const post = await repo.getPostBySlug(params.slug);
   if (!post) notFound();
 

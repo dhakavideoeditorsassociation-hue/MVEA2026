@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 
+import { HireRequestButton } from "@/components/hire/hire-request-button";
 import { PageHero } from "@/components/common/page-hero";
 import { MemberCard } from "@/components/members/member-card";
 import { Button } from "@/components/ui/button";
@@ -82,6 +83,13 @@ export function MembersDirectoryView({ members }: { members: Member[] }) {
   return (
     <>
       <PageHero eyebrow={t("members.eyebrow")} title={t("members.title")} subtitle={t("members.subtitle")}>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-foreground">{t("hire.bannerTitle")}</p>
+            <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">{t("hire.bannerBody")}</p>
+          </div>
+          <HireRequestButton label={t("hire.cta")} />
+        </div>
         <div className="grid gap-3 rounded-lg border border-border bg-card p-4 shadow-card lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />

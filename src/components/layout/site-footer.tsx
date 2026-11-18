@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 
 import { FacebookIcon } from "@/components/brand-icons";
-import type { AssociationInfo } from "@/lib/data/repository";
+import { useSiteSettings } from "@/lib/cms/site-settings";
 import type { TranslationKey } from "@/lib/i18n/dictionaries";
 import { useI18n } from "@/lib/i18n/provider";
 
@@ -12,7 +12,7 @@ import { Logo } from "./logo";
 
 const EXPLORE: Array<{ href: string; key: TranslationKey }> = [
   { href: "/members", key: "nav.members" },
-  { href: "/programs", key: "nav.programs" },
+  { href: "/articles", key: "nav.articles" },
   { href: "/media-coverage", key: "nav.coverage" },
   { href: "/committee", key: "nav.committee" },
 ];
@@ -21,25 +21,26 @@ const RESOURCES: Array<{ href: string; key: TranslationKey }> = [
   { href: "/about", key: "footer.ethics" },
   { href: "/about", key: "footer.constitution" },
   { href: "/login", key: "footer.membership" },
-  { href: "/members", key: "footer.recruiters" },
+  { href: "/resources", key: "nav.resources" },
 ];
 
-export function SiteFooter({ association }: { association: AssociationInfo }) {
+export function SiteFooter() {
   const { t, lang, tx } = useI18n();
+  const { settings } = useSiteSettings();
   const year = new Date().getFullYear();
+  const contact = settings.contact;
 
   return (
     <footer className="mt-20 border-t border-border bg-card/40 print-hidden">
       <div className="container grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-4">
           <Logo asStatic />
-          <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">{t("footer.about")}</p>
           <p className="text-xs font-medium text-muted-foreground">
             {lang === "bn" ? t("brand.orgBn") : "Gonomadhyam Video Editor Association"}
           </p>
           <div className="flex items-center gap-2">
             <a
-              href={association.facebook}
+              href={contact.facebook}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={t("footer.facebook")}
@@ -81,9 +82,9 @@ export function SiteFooter({ association }: { association: AssociationInfo }) {
           <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
             <li className="flex items-start gap-2.5">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-              <span>{tx(association.address)}</span>
+              <span>{tx(contact.address)}</span>
             </li>
-            {association.emails.map((email) => (
+            {contact.emails.map((email) => (
               <li key={email} className="flex items-start gap-2.5">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
                 <a href={`mailto:${email}`} className="link-underline break-all" dir="ltr">
@@ -91,7 +92,7 @@ export function SiteFooter({ association }: { association: AssociationInfo }) {
                 </a>
               </li>
             ))}
-            {association.phones.map((phone) => (
+            {contact.phones.map((phone) => (
               <li key={phone} className="flex items-center gap-2.5">
                 <Phone className="h-4 w-4 shrink-0 text-primary" aria-hidden />
                 <a href={`tel:${phone.replace(/\s+/g, "")}`} dir="ltr" className="link-underline">

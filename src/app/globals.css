@@ -187,3 +187,97 @@
     content: "";
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Print / PDF: member CV
+   Single-column A4 sheet, light paper, no site chrome. Used by
+   /members/[slug]/cv when the browser print dialog exports the PDF.
+--------------------------------------------------------------------------- */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  body {
+    font-size: 11.5pt;
+    line-height: 1.5;
+  }
+
+  header.sticky,
+  footer,
+  .no-print,
+  .print-hidden {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .cv-page {
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+  }
+
+  .cv-page h1,
+  .cv-page h2,
+  .cv-page h3,
+  .cv-page p,
+  .cv-page li,
+  .cv-page dd,
+  .cv-page dt {
+    color: #111827 !important;
+  }
+
+  .cv-page .text-primary {
+    color: #b3121f !important;
+  }
+
+  .cv-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-top: 14pt !important;
+  }
+
+  .cv-page a {
+    color: #111827 !important;
+    text-decoration: none !important;
+  }
+
+  .cv-page img {
+    background: #ffffff !important;
+  }
+}
+@keyframes ken-burns {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+
+.ken-burns {
+  animation: ken-burns 18s ease-out both;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ken-burns {
+    animation: none;
+  }
+}

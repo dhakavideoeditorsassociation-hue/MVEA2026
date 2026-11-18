@@ -7,7 +7,6 @@ import type {
   LocalizedText,
   Member,
   PressArticle,
-  PressRelease,
   SocialLinks,
 } from "@/lib/types";
 
@@ -320,36 +319,7 @@ export const seedPress: PressArticle[] = [
   },
 ];
 
-export const seedPressReleases: PressRelease[] = [
-  {
-    id: "release-committee",
-    title: L(
-      "Official: 31-member Convener Committee announced",
-      "অফিসিয়াল: ৩১ সদস্যের আহ্বায়ক কমিটি ঘোষণা",
-    ),
-    excerpt: L(
-      "The full committee list, published on the association's Facebook page on 13 March 2026.",
-      "১৩ মার্চ ২০২৬ তারিখে সংগঠনের ফেসবুক পেজে প্রকাশিত পূর্ণ কমিটি তালিকা।",
-    ),
-    url: FACEBOOK_PAGE,
-    imageUrl: pressImages.banglanews,
-    publishedAt: "2026-03-13T22:00:00+06:00",
-  },
-  {
-    id: "release-directory",
-    title: L(
-      "Statement: verified editor directory opens for recruiters",
-      "বিবৃতি: রিক্রুটারদের জন্য যাচাইকৃত এডিটর তালিকা চালু",
-    ),
-    excerpt: L(
-      "Media houses can now search verified broadcast and digital editors and send hiring inquiries directly.",
-      "মিডিয়া হাউসগুলো এখন যাচাইকৃত ব্রডকাস্ট ও ডিজিটাল এডিটর খুঁজে সরাসরি নিয়োগের অনুরোধ পাঠাতে পারবে।",
-    ),
-    url: FACEBOOK_PAGE,
-    imageUrl: pressImages.jugantor,
-    publishedAt: "2026-03-20T19:30:00+06:00",
-  },
-];
+export { pressReleases as seedPressReleases } from "./press-releases";
 
 export const seedPosts: CmsPost[] = [
   {

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { Avatar } from "@/components/common/avatar";
+import { useSiteSettings } from "@/lib/cms/site-settings";
 import { SectionHeading } from "@/components/common/section-heading";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { MemberCard } from "@/components/members/member-card";
@@ -47,13 +48,16 @@ type HomeViewProps = {
   slides: HeroSlide[];
   featured: Member[];
   press: PressArticle[];
+  pressMore: PressArticle[];
   releases: PressRelease[];
   posts: CmsPost[];
   committee: CommitteeMember[];
 };
 
-export function HomeView({ slides, featured, press, releases, posts, committee }: HomeViewProps) {
+export function HomeView({ slides, featured, press, pressMore, releases, posts, committee }: HomeViewProps) {
   const { t, tx, lang } = useI18n();
+  const { settings } = useSiteSettings();
+  const ICONS = PILLARS.map((pillar) => pillar.Icon);
 
   return (
     <>
@@ -66,18 +70,21 @@ export function HomeView({ slides, featured, press, releases, posts, committee }
           subtitle={t("home.pillars.subtitle")}
         />
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {PILLARS.map(({ key, Icon, title, desc }) => (
+          {settings.pillars.map((pillar, pillarIndex) => {
+            const Icon = ICONS[pillarIndex % ICONS.length];
+            return (
             <article
-              key={key}
+              key={pillar.id}
               className="group relative overflow-hidden rounded-lg border border-border bg-card p-5 shadow-card transition-all duration-300 ease-smooth hover:-translate-y-1 hover:border-primary/40"
             >
               <span className="inline-grid h-11 w-11 place-items-center rounded-md bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                 <Icon className="h-5 w-5" aria-hidden />
               </span>
-              <h3 className="mt-4 text-base font-semibold text-foreground">{t(title)}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(desc)}</p>
+              <h3 className="mt-4 text-base font-semibold text-foreground">{tx(pillar.title)}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tx(pillar.desc)}</p>
             </article>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -104,10 +111,29 @@ export function HomeView({ slides, featured, press, releases, posts, committee }
           subtitle={t("home.press.subtitle")}
           action={{ href: "/media-coverage", label: t("home.press.cta") }}
         />
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {press.map((article) => (
-            <PressCard key={article.id} article={article} />
-          ))}
+        <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {press.map((article) => (
+              <PressCard key={article.id} article={article} />
+            ))}
+          </div>
+          <aside className="rounded-lg border border-border bg-card p-4 shadow-card">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t("home.press.eyebrow")}</h3>
+            <ul className="mt-3 space-y-3">
+              {pressMore.map((article) => (
+                <li key={article.id} className="border-b border-border/60 pb-3 last:border-0 last:pb-0">
+                  <a href={article.url} target="_blank" rel="noopener noreferrer" className="group block">
+                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-primary">{article.source}</span>
+                    <span className="mt-1 block text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-primary">{tx(article.title)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <Link href="/media-coverage" className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">
+              {t("home.press.cta")}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            </Link>
+          </aside>
         </div>
       </section>
 
@@ -118,7 +144,7 @@ export function HomeView({ slides, featured, press, releases, posts, committee }
               eyebrow={t("home.releases.eyebrow")}
               title={t("home.releases.title")}
               subtitle={t("home.releases.subtitle")}
-              action={{ href: "/media-coverage#press-releases", label: t("home.releases.cta") }}
+              action={{ href: "/press-releases", label: t("home.releases.cta") }}
             />
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {releases.map((release) => (
@@ -134,7 +160,7 @@ export function HomeView({ slides, featured, press, releases, posts, committee }
           eyebrow={t("home.programs.eyebrow")}
           title={t("home.programs.title")}
           subtitle={t("home.programs.subtitle")}
-          action={{ href: "/programs", label: t("home.programs.cta") }}
+          action={{ href: "/articles", label: t("home.programs.cta") }}
         />
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (

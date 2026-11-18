@@ -83,6 +83,7 @@ export type CmsPost = {
   slug: string;
   category: PostCategory;
   title: LocalizedText;
+  subheadline?: LocalizedText;
   excerpt: LocalizedText;
   body: LocalizedText[];
   coverImageUrl: string;
@@ -104,14 +105,22 @@ export type PressArticle = {
   featured: boolean;
 };
 
-/** An official statement published on the association's Facebook page. */
+/**
+ * An official statement. Published as a full-text article (slug + body) and as
+ * the corresponding photocard on the association's Facebook page.
+ */
 export type PressRelease = {
   id: string;
+  slug: string;
   title: LocalizedText;
+  subheadline?: LocalizedText;
   excerpt: LocalizedText;
+  body: LocalizedText[];
+  refNo?: string;
   url: string;
   imageUrl: string;
   publishedAt: string;
+  featured?: boolean;
 };
 
 export type CommitteeRole = "convener" | "joint-convener" | "member-secretary" | "member";
@@ -141,6 +150,21 @@ export type RecruiterInquiry = {
   createdAt: string;
 };
 
+/** A recruiter request submitted through the 2-step Request Editor flow. */
+export type HireRequest = {
+  id: string;
+  memberId: string;
+  memberName: string;
+  organization: string;
+  requesterName: string;
+  requesterRole: string;
+  phone: string;
+  email: string;
+  engagement: "full-time" | "project" | "documentary";
+  note: string;
+  status: "pending" | "availability-checked" | "email-sent";
+  createdAt: string;
+};
 export type ApplicationWorkItem = {
   id: string;
   organization: string;
@@ -193,4 +217,48 @@ export type FetchOgResult = {
   image: string | null;
   siteName: string;
   publishedAt: string | null;
+};
+
+/* ------------------------------------------------------------------ */
+/* Site settings (Firestore `site_settings/main`)                      */
+/* ------------------------------------------------------------------ */
+
+export type SitePolicyKey = "about" | "ethics" | "membership" | "recruiters";
+
+export type SitePillar = {
+  id: string;
+  title: LocalizedText;
+  desc: LocalizedText;
+};
+
+export type SiteHero = {
+  eyebrow: LocalizedText;
+  headline: LocalizedText;
+  subheadline: LocalizedText;
+  primaryCta: LocalizedText;
+  secondaryCta: LocalizedText;
+  /** Cloudinary URLs; empty means "use the hero slide images". */
+  backgrounds: string[];
+};
+
+export type SiteAnnouncement = {
+  enabled: boolean;
+  text: LocalizedText;
+  href?: string;
+};
+
+export type SiteContact = {
+  emails: string[];
+  phones: string[];
+  address: LocalizedText;
+  facebook: string;
+};
+
+export type SiteSettings = {
+  hero: SiteHero;
+  pillars: SitePillar[];
+  policies: Record<SitePolicyKey, LocalizedText>;
+  announcement: SiteAnnouncement;
+  contact: SiteContact;
+  updatedAt?: string;
 };
